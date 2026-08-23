@@ -1,18 +1,19 @@
-<?php
-    echo "<h1>Welcome to Ticketheaven!</h1>";
-?>
-
 <!DOCTYPE HTML>
-	<html lang=“eng”>
-	<head>
-		<meta charset="utf-8">
-		<title>Index</title>
-		<link rel="stylesheet" href="style.css">
-	</head>
-	<body>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+    <h1>Welcome to Ticketheaven!</h1>
+
+	link to the login page
+	<a href="login.php">Login</a>
 
 
-	</body>
+
+</body>
 </html>
-
- 
