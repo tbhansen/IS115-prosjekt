@@ -10,8 +10,9 @@
 
     <h1>Welcome to Ticketheaven!</h1>
 
-	link to the login page
-	<a href="login.php">Login</a>
+	<p>Ticket tracking software created by Noah and Tobias.</p>
+    <p> <a href="login.php">Login</a> to access your account. </p>
+
 
 
 
