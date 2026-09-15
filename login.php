@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 
     <p class="bottom-text">
-        Please contact your administrator if you have issues with the login process.
+        Please contact your administrator if you have issues with the login process. <a href="create_user.php">Create a new user</a> if you are an administrator.
     </p>
 
 </body>

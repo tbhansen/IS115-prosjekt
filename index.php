@@ -16,22 +16,11 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <body>
 
-    <h1>Welcome to Ticketheaven!</h1>
+    <h1 class="page-title-1">Welcome to Ticketheaven!</h1>
 
     <p>Ticket tracking software created by Noah and Tobias.</p>
-    <p> <a href="login.php">Login</a> to access your account. </p>
-
-    <h2 style="margin-top: 6rem;">Database connection test</h2>
-    <h3 style="margin-bottom: 1.5rem;">List of all users:</h3>
-
-    <?php foreach ($users as $user): ?>
-        <p>
-            <?php echo htmlspecialchars($user["name"]); ?>
-        </p>
-    <?php endforeach; ?>
-
-
+    <p> <button><a href="create_ticket.php">Create Ticket</a></button> here to create a new ticket.</p>
+    <p> <button><a href="login.php">Login</a></button> to access your account for administration. </p>
 
 </body>
-
 </html>

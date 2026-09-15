@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <body>
 
-    <h1>Create User</h1>
+    <h1 class="page-title-1">Create User</h1>
 
     <form method="POST">
 

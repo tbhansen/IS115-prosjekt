@@ -24,7 +24,7 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 
 <body>
-    <h1>Tickets</h1>
+    <h1 class="page-title-1">Tickets</h1>
 
     <p>
         Welcome, <?php echo htmlspecialchars($_SESSION["name"]); ?>!
