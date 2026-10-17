@@ -3,16 +3,16 @@ session_start();
 
 require_once "db.php";
 
-// Redirect to login if user is not authenticated
+// Redirect to login if user is not authenticated as staff
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
     exit;
 }
 
-$pageTitle = "Tickets at a glance";
+$pageTitle = "Staff Dashboard";
 $currentUserId = $_SESSION["user_id"];
 
-// 1. Fetch tickets assigned to the logged-in user
+// 1. Fetch tickets assigned to the logged-in staff member
 $stmtOwned = $pdo->prepare(
     "SELECT * FROM tickets 
      WHERE assigned_to = ? 
@@ -31,11 +31,14 @@ $stmtUnassigned = $pdo->query(
 );
 $unassignedTickets = $stmtUnassigned->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Fetch all tickets for the complete overview
+// 3. Fetch all tickets for the complete overview with assigned staff name
 $stmtAll = $pdo->query(
-    "SELECT tickets.*, users.name AS created_by_name 
+    "SELECT tickets.*, 
+            assignee.name AS assigned_to_name,
+            creator.name AS created_by_staff_name
      FROM tickets 
-     LEFT JOIN users ON tickets.created_by = users.id 
+     LEFT JOIN users AS assignee ON tickets.assigned_to = assignee.id
+     LEFT JOIN users AS creator ON tickets.created_by = creator.id
      ORDER BY tickets.created_at DESC"
 );
 $allTickets = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
@@ -46,14 +49,16 @@ $countInProgress = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status =
 $countClosed = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'closed'")->fetchColumn();
 $countTotal = $countOpen + $countInProgress + $countClosed;
 
-// Include standard header with navigation bar
 require_once "header.php";
 ?>
 
 <div class="page-header">
-    <h1 class="page-title">Tickets at a glance</h1>
     <div>
-        <a href="create_ticket.php" class="btn btn-primary">+ Create Ticket</a>
+        <h1 class="page-title">Staff Dashboard</h1>
+        <p style="color: #64748b; font-size: 0.9rem;">Overview of customer inquiries, assignments, and ticket statuses.</p>
+    </div>
+    <div>
+        <a href="create_ticket.php" class="btn btn-primary">+ Create Ticket (for Customer)</a>
     </div>
 </div>
 
@@ -67,7 +72,7 @@ require_once "header.php";
         <div class="card">
             <div class="card-header">
                 <span class="card-title">
-                    &#9662; Highest priority tickets I own
+                    &#9662; Tickets Assigned to Me
                 </span>
                 <span class="card-count">(Found <?php echo count($ownedTickets); ?> <?php echo count($ownedTickets) === 1 ? 'ticket' : 'tickets'; ?>)</span>
             </div>
@@ -75,16 +80,17 @@ require_once "header.php";
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 60px;">#</th>
+                            <th style="width: 50px;">#</th>
                             <th>Subject</th>
-                            <th style="width: 120px;">Status</th>
-                            <th style="width: 150px;">Created</th>
+                            <th>Customer</th>
+                            <th style="width: 110px;">Status</th>
+                            <th style="width: 140px;">Created</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($ownedTickets)): ?>
                             <tr>
-                                <td colspan="4" class="table-empty">No tickets currently assigned to you.</td>
+                                <td colspan="5" class="table-empty">No tickets currently assigned to you.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($ownedTickets as $ticket): ?>
@@ -94,6 +100,9 @@ require_once "header.php";
                                         <a class="ticket-link" href="ticket-view.php?id=<?php echo htmlspecialchars($ticket["id"]); ?>">
                                             <?php echo htmlspecialchars($ticket["title"]); ?>
                                         </a>
+                                    </td>
+                                    <td>
+                                        <?php echo htmlspecialchars($ticket["customer_name"]); ?>
                                     </td>
                                     <td>
                                         <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
@@ -113,7 +122,7 @@ require_once "header.php";
         <div class="card">
             <div class="card-header">
                 <span class="card-title">
-                    &#9662; 10 newest unowned tickets
+                    &#9662; Unassigned Tickets (Need Attention)
                 </span>
                 <span class="card-count">(Found <?php echo count($unassignedTickets); ?> <?php echo count($unassignedTickets) === 1 ? 'ticket' : 'tickets'; ?>)</span>
             </div>
@@ -121,17 +130,18 @@ require_once "header.php";
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 60px;">#</th>
+                            <th style="width: 50px;">#</th>
                             <th>Subject</th>
-                            <th style="width: 120px;">Status</th>
-                            <th style="width: 150px;">Created</th>
+                            <th>Customer</th>
+                            <th style="width: 110px;">Status</th>
+                            <th style="width: 140px;">Created</th>
                             <th style="width: 80px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($unassignedTickets)): ?>
                             <tr>
-                                <td colspan="5" class="table-empty">No unassigned tickets found. Great job!</td>
+                                <td colspan="6" class="table-empty">All tickets are assigned. Great job!</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($unassignedTickets as $ticket): ?>
@@ -143,6 +153,10 @@ require_once "header.php";
                                         </a>
                                     </td>
                                     <td>
+                                        <?php echo htmlspecialchars($ticket["customer_name"]); ?><br>
+                                        <small style="color: #64748b;"><?php echo htmlspecialchars($ticket["customer_email"]); ?></small>
+                                    </td>
+                                    <td>
                                         <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
                                             <?php echo htmlspecialchars(str_replace('_', ' ', $ticket["status"])); ?>
                                         </span>
@@ -150,7 +164,7 @@ require_once "header.php";
                                     <td><?php echo date('d-m-Y H:i', strtotime($ticket["created_at"])); ?></td>
                                     <td>
                                         <a href="ticket-view.php?id=<?php echo htmlspecialchars($ticket["id"]); ?>" class="btn btn-outline btn-sm">
-                                            View
+                                            Open
                                         </a>
                                     </td>
                                 </tr>
@@ -165,7 +179,7 @@ require_once "header.php";
         <div class="card">
             <div class="card-header">
                 <span class="card-title">
-                    &#9662; All tickets in system
+                    &#9662; All Tickets Overview
                 </span>
                 <span class="card-count">(Total <?php echo count($allTickets); ?>)</span>
             </div>
@@ -173,17 +187,18 @@ require_once "header.php";
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 60px;">#</th>
+                            <th style="width: 50px;">#</th>
                             <th>Subject</th>
-                            <th>Created by</th>
-                            <th style="width: 120px;">Status</th>
-                            <th style="width: 150px;">Created</th>
+                            <th>Customer</th>
+                            <th>Assigned Staff</th>
+                            <th style="width: 110px;">Status</th>
+                            <th style="width: 140px;">Created</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($allTickets)): ?>
                             <tr>
-                                <td colspan="5" class="table-empty">No tickets created yet.</td>
+                                <td colspan="6" class="table-empty">No tickets in system yet.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($allTickets as $ticket): ?>
@@ -194,7 +209,16 @@ require_once "header.php";
                                             <?php echo htmlspecialchars($ticket["title"]); ?>
                                         </a>
                                     </td>
-                                    <td><?php echo htmlspecialchars($ticket["created_by_name"] ?? 'Unknown'); ?></td>
+                                    <td>
+                                        <?php echo htmlspecialchars($ticket["customer_name"]); ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($ticket["assigned_to_name"])): ?>
+                                            <?php echo htmlspecialchars($ticket["assigned_to_name"]); ?>
+                                        <?php else: ?>
+                                            <span style="color: #94a3b8; font-style: italic;">Unassigned</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
                                             <?php echo htmlspecialchars(str_replace('_', ' ', $ticket["status"])); ?>
@@ -217,7 +241,7 @@ require_once "header.php";
         <!-- Queue Status Summary Widget -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">Queue list</span>
+                <span class="card-title">Queue Status</span>
             </div>
             <div class="card-body-table">
                 <table class="queue-table">
@@ -255,20 +279,21 @@ require_once "header.php";
                 <span class="card-title">Quick Actions</span>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 0.6rem;">
-                <a href="create_ticket.php" class="btn btn-primary" style="text-align: center;">+ Create New Ticket</a>
-                <a href="create_user.php" class="btn btn-outline" style="text-align: center;">+ Add New User</a>
-                <a href="logout.php" class="btn btn-outline" style="text-align: center; color: #c5221f;">Log out</a>
+                <a href="create_ticket.php" class="btn btn-primary" style="text-align: center;">+ New Ticket (Internal)</a>
+                <a href="index.php" target="_blank" class="btn btn-outline" style="text-align: center;">Open Customer Form &UpperRightArrow;</a>
+                <a href="create_user.php" class="btn btn-outline" style="text-align: center;">+ Add Staff User</a>
+                <a href="logout.php" class="btn btn-outline" style="text-align: center; color: #c5221f;">Log Out</a>
             </div>
         </div>
 
-        <!-- Quick tips / School project info -->
+        <!-- System info -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">System Info</span>
+                <span class="card-title">Role Information</span>
             </div>
-            <div class="card-body" style="font-size: 0.85rem; color: #475569;">
-                <p>Welcome to <strong>Ticketheaven</strong>.</p>
-                <p style="margin-top: 0.5rem;">Use this dashboard to manage support requests, track ticket status, and assign tasks across the team.</p>
+            <div class="card-body" style="font-size: 0.85rem; color: #475569; line-height: 1.6;">
+                <p><strong>Customer Portal:</strong> Customers use the public form at <code>index.php</code> without needing an account.</p>
+                <p style="margin-top: 0.5rem;"><strong>Staff Portal:</strong> Staff members log in to manage tickets, change statuses, and reassign cases.</p>
             </div>
         </div>
 
@@ -277,6 +302,5 @@ require_once "header.php";
 </div>
 
 <?php
-// Include standard footer
 require_once "footer.php";
 ?>

@@ -44,7 +44,7 @@ require_once "header.php";
 ?>
 
 <div class="page-header">
-    <h1 class="page-title">User Registration</h1>
+    <h1 class="page-title">Staff Registration</h1>
     <?php if (isset($_SESSION["user_id"])): ?>
         <a href="tickets.php" class="btn btn-outline">&larr; Back to Dashboard</a>
     <?php else: ?>
@@ -55,7 +55,7 @@ require_once "header.php";
 <div style="max-width: 500px; margin: 1.5rem auto;">
     <div class="card">
         <div class="card-header">
-            <span class="card-title">Add New User</span>
+            <span class="card-title">Add New Staff Member</span>
         </div>
         <div class="card-body">
 

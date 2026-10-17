@@ -40,7 +40,7 @@ require_once "header.php";
 <div style="max-width: 440px; margin: 3rem auto;">
     <div class="card">
         <div class="card-header">
-            <span class="card-title">Sign In to Ticketheaven</span>
+            <span class="card-title">Staff Login (Kundebehandler)</span>
         </div>
         <div class="card-body">
 
