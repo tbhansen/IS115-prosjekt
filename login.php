@@ -3,29 +3,30 @@ session_start();
 
 require_once "db.php";
 
+// If already logged in, redirect directly to dashboard
+if (isset($_SESSION["user_id"])) {
+    header("Location: tickets.php");
+    exit;
+}
+
+$pageTitle = "Login";
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $username = trim($_POST["username"] ?? "");
+    $password = $_POST["password"] ?? "";
 
-    $username = $_POST["username"];
-    $password = $_POST["password"];
-
-    $stmt = $pdo->prepare(
-        "SELECT * FROM users WHERE username = ?"
-    );
-
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->execute([$username]);
-
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user["password_hash"])) {
-
-        //Save user information in session variables
+        // Save user information in session
         $_SESSION["user_id"] = $user["id"];
         $_SESSION["username"] = $user["username"];
         $_SESSION["name"] = $user["name"];
 
-        //Sends the user to tickets.php page
+        // Redirect to tickets dashboard
         header("Location: tickets.php");
         exit;
     } else {
@@ -33,59 +34,57 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
+require_once "header.php";
 ?>
 
-<!DOCTYPE HTML>
-<html lang="en">
+<div style="max-width: 440px; margin: 3rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Sign In to Ticketheaven</span>
+        </div>
+        <div class="card-body">
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link href="style.css" rel="stylesheet" type="text/css">
-</head>
+            <?php if (!empty($error)): ?>
+                <div class="alert alert-error">
+                    <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
 
-<body>
+            <form method="POST" action="login.php">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-control" 
+                        required 
+                        autofocus>
+                </div>
 
-    <h1>Welcome</h1>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        required>
+                </div>
 
-    <form method="POST">
+                <div style="margin-top: 1.25rem;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
+                </div>
+            </form>
 
-        <p>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #edf2f7; font-size: 0.82rem; color: #64748b; text-align: center;">
+                Need an account? <a href="create_user.php" class="ticket-link">Create a new user</a>
+            </div>
 
-            <label for="username">Username:</label>
-            <input
-                type="text"
-                id="username"
-                name="username"
-                required>
-        </p>
+        </div>
+    </div>
+</div>
 
-        <p>
-            <label for="password">Password:</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                required>
-        </p>
-
-        <button type="submit">Login</button>
-
-    </form>
-
-    <?php if ($error): ?>
-        <p>
-            <?php echo htmlspecialchars($error); ?>
-        </p>
-
-    <?php endif; ?>
-
-
-    <p class="bottom-text">
-        Please contact your administrator if you have issues with the login process. <a href="create_user.php">Create a new user</a> if you are an administrator.
-    </p>
-
-</body>
-
-</html>
+<?php
+require_once "footer.php";
+?>

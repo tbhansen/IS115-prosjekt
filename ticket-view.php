@@ -3,21 +3,21 @@ session_start();
 
 require_once "db.php";
 
+// Ensure user is logged in
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
     exit;
 }
 
 // Check that a ticket ID was provided
-if (!isset($_GET["id"])) {
-    echo "No ticket ID provided";
+if (!isset($_GET["id"]) || !is_numeric($_GET["id"])) {
+    header("Location: tickets.php");
     exit;
 }
 
-//Get ticket ID from the URL
-$id = $_GET["id"];
+$id = (int)$_GET["id"];
 
-//Fetch ticket details from the database
+// Fetch ticket details from the database with creator and assignee names
 $stmt = $pdo->prepare(
     "SELECT
         tickets.*,
@@ -32,66 +32,88 @@ $stmt = $pdo->prepare(
 );
 
 $stmt->execute([$id]);
-
 $ticket = $stmt->fetch(PDO::FETCH_ASSOC);
 
-//Check if the ticket exists
+// Check if the ticket exists
 if (!$ticket) {
-    echo "Ticket not found";
-    exit;
+    die("Ticket not found. <a href='tickets.php'>Back to dashboard</a>");
 }
+
+$pageTitle = "Ticket #" . $ticket["id"] . " - " . $ticket["title"];
+
+require_once "header.php";
 ?>
 
-<!DOCTYPE HTML>
-<html lang="en">
+<div class="page-header">
+    <div>
+        <a href="tickets.php" class="btn btn-outline btn-sm">&larr; Back to Dashboard</a>
+    </div>
+    <div>
+        <a href="create_ticket.php" class="btn btn-primary btn-sm">+ New Ticket</a>
+    </div>
+</div>
 
-<head>
-    <meta charset="utf-8">
-    <title>Ticket: <?php echo htmlspecialchars($ticket["title"]); ?></title>
-    <link href="style.css" rel="stylesheet" type="text/css">
-</head>
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <span class="card-title">
+            Ticket #<?php echo htmlspecialchars($ticket["id"]); ?>: <?php echo htmlspecialchars($ticket["title"]); ?>
+        </span>
+        <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
+            <?php echo htmlspecialchars(str_replace('_', ' ', $ticket["status"])); ?>
+        </span>
+    </div>
 
-<body>
-    <a class="back-link" href="tickets.php">Ticket overview</a>
-    <br>
+    <div class="card-body">
 
-    <h3>Ticket #<?php echo $ticket["id"]; ?></h3>
-    <h2>
-        <?php echo htmlspecialchars($ticket["title"]); ?>
-    </h2>
-    <p>
-        <strong>Status:</strong>
-        <?php echo htmlspecialchars($ticket["status"]); ?>
-    </p>
-    <p>
-        <strong>Assigned to:</strong>
-        <?php if ($ticket["assigned_to_name"]): ?>
-            <?php echo htmlspecialchars($ticket["assigned_to_name"]); ?>
-        <?php else: ?>
-            Unassigned
-        <?php endif; ?>
-    </p>
-    <p>
-    <strong>Created by:</strong>
-        <?php echo htmlspecialchars($ticket["created_by_name"]); ?>
-    </p>
-    <p>
-        <strong>Created:</strong>
-        <?php echo date("d-m-Y H:i", strtotime($ticket["created_at"])); ?>
-    </p>
-    <p>
-        <strong>Updated at:</strong>
-        <?php echo date("d-m-Y H:i", strtotime($ticket["updated_at"])); ?>
-    </p>
+        <!-- Metadata Grid -->
+        <div class="ticket-meta-grid">
+            <div>
+                <div class="meta-item-label">Status</div>
+                <div class="meta-item-value">
+                    <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
+                        <?php echo htmlspecialchars(str_replace('_', ' ', $ticket["status"])); ?>
+                    </span>
+                </div>
+            </div>
 
+            <div>
+                <div class="meta-item-label">Assigned To</div>
+                <div class="meta-item-value">
+                    <?php echo $ticket["assigned_to_name"] ? htmlspecialchars($ticket["assigned_to_name"]) : "<em>Unassigned</em>"; ?>
+                </div>
+            </div>
 
+            <div>
+                <div class="meta-item-label">Created By</div>
+                <div class="meta-item-value">
+                    <?php echo htmlspecialchars($ticket["created_by_name"] ?? "Unknown"); ?>
+                </div>
+            </div>
 
+            <div>
+                <div class="meta-item-label">Created Date</div>
+                <div class="meta-item-value">
+                    <?php echo date("d-m-Y H:i", strtotime($ticket["created_at"])); ?>
+                </div>
+            </div>
 
-    <h3>Description</h3>
-    <p>
-        <?php echo nl2br(htmlspecialchars($ticket["description"])); ?>
-    </p>
+            <div>
+                <div class="meta-item-label">Last Updated</div>
+                <div class="meta-item-value">
+                    <?php echo date("d-m-Y H:i", strtotime($ticket["updated_at"])); ?>
+                </div>
+            </div>
+        </div>
 
-</body>
+        <!-- Ticket Description Section -->
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem; color: #1e293b;">Description</h3>
+        <div class="ticket-description-box">
+            <?php echo nl2br(htmlspecialchars($ticket["description"])); ?>
+        </div>
 
-</html>
+    </div>
+</div>
+
+<?php
+require_once "footer.php";
+?>

@@ -1,20 +1,39 @@
-<!DOCTYPE HTML>
-<html lang="en">
+<?php
+session_start();
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
-    <link href="style.css" rel="stylesheet" type="text/css">
-</head>
+$pageTitle = "Welcome";
 
-<body>
+require_once "header.php";
+?>
 
-    <h1 class="page-title-1">Welcome to Ticketheaven!</h1>
+<div class="page-header">
+    <h1 class="page-title">Welcome to Ticketheaven</h1>
+</div>
 
-    <p>Ticket tracking software created by Noah and Tobias.</p>
-    <p> <button><a href="create_ticket.php">Create Ticket</a></button> here to create a new ticket.</p>
-    <p> <button><a href="login.php">Login</a></button> to access your account for administration. </p>
+<div style="max-width: 800px; margin: 1rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Customer Support &amp; Ticket Tracking System</span>
+        </div>
+        <div class="card-body" style="font-size: 0.95rem; line-height: 1.7;">
+            <p>
+                <strong>Ticketheaven</strong> is a web-based service desk application built for IS-115 by Noah and Tobias.
+                It allows customers and staff to submit support requests, track issues in real-time, and manage tickets efficiently.
+            </p>
 
-</body>
-</html>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <?php if (isset($_SESSION["user_id"])): ?>
+                    <a href="tickets.php" class="btn btn-primary">Go to Dashboard &rarr;</a>
+                    <a href="create_ticket.php" class="btn btn-outline">+ Create Ticket</a>
+                <?php else: ?>
+                    <a href="login.php" class="btn btn-primary">Log In &rarr;</a>
+                    <a href="create_ticket.php" class="btn btn-outline">+ Submit a Ticket</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+require_once "footer.php";
+?>

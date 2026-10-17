@@ -1,93 +1,448 @@
-/* General Styles */
-body {
-    height: 100%;
-    font-family: Arial, sans-serif;
-    margin: 0m;
-    padding: 2rem;
-    background-color: #a5bbc9;
-    color: #333;
+/* ==========================================================================
+   IS-115 TICKET SYSTEM STYLESHEET
+   Clean, modern dashboard style inspired by Request Tracker (RT)
+   ========================================================================== */
 
+/* 1. Base / Reset styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f2f5f8;
+    color: #333333;
+    line-height: 1.5;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-h1, h2, h3 {
-    color: #444;
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+/* 2. Top Navigation Bar */
+.top-nav {
+    background-color: #ffffff;
+    border-bottom: 1px solid #dce2e6;
+    padding: 0.6rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.page-title-1 {
-    text-align: center;
-    margin-bottom: 4rem;
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 }
 
-h4, h5, h6 {
-    color: #666;
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #1f3a60;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
 }
 
-p  {
+.logo-icon {
+    font-size: 1.1rem;
+    color: #1f618d;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #495057;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.nav-item:hover {
+    color: #1f618d;
+    background-color: #f1f4f8;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.user-greeting {
+    font-size: 0.85rem;
     color: #555;
-    line-height: 1.6;
-    margin-bottom: 0.5rem;
-
 }
 
-main {
-    max-width: 800px;
-    flex: 1;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: #fff;
-    border-radius: 8px;
-}
-
-footer {
-    background-color: #e9e9e9;
-    text-align: center;
-    padding: 1rem;
-    border-top: 1px solid #ccc;
-}
-
-.bottom-text {
-    margin-top: 15rem;
-    padding: 1.5rem;
-    background-color: #e9e9e9;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    text-align: center;
-}
-
-.back-link {
+/* 3. Button styles */
+.btn {
     display: inline-block;
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-    color: #3f3f3f;
-    font-weight: bold;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-primary {
+    background-color: #1f618d;
+    color: #ffffff;
+    border-color: #1a5276;
+}
+
+.btn-primary:hover {
+    background-color: #174d71;
+}
+
+.btn-outline {
+    background-color: #ffffff;
+    color: #495057;
+    border-color: #ced4da;
+}
+
+.btn-outline:hover {
+    background-color: #f8f9fa;
+    border-color: #b0b8c0;
+}
+
+.btn-sm {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.8rem;
+}
+
+/* 4. Main content layout */
+.main-content {
+    flex: 1;
+    max-width: 1250px;
+    width: 100%;
+    margin: 1.5rem auto;
+    padding: 0 1.25rem;
+}
+
+/* Page title bar */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.page-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Two-column dashboard grid (Request Tracker layout) */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.dashboard-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* 5. Card Component (The white boxes in RT) */
+.card {
+    background-color: #ffffff;
+    border: 1px solid #d8e2ea;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e6ecf1;
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1f618d;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.card-count {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: normal;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+.card-body-table {
+    padding: 0;
+}
+
+/* 6. Tables */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
-    background-color: #fff;
-}
-
-th,
-td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+    font-size: 0.88rem;
 }
 
 th {
-    background-color: #e9e9e9;
-    color: #333;
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+td {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid #edf2f7;
+    color: #334155;
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
 }
 
 tbody tr:hover {
-    background-color: #f1f1f1;
+    background-color: #f8fafc;
+}
+
+.table-empty {
+    padding: 1.5rem;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+}
+
+.ticket-link {
+    color: #1f618d;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.ticket-link:hover {
+    text-decoration: underline;
+}
+
+/* 7. Status Badges */
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+}
+
+.badge-open {
+    background-color: #e6f4ea;
+    color: #137333;
+    border: 1px solid #ceead6;
+}
+
+.badge-in_progress {
+    background-color: #fef7e0;
+    color: #b06000;
+    border: 1px solid #fdd663;
+}
+
+.badge-closed {
+    background-color: #f1f3f4;
+    color: #5f6368;
+    border: 1px solid #dadce0;
+}
+
+/* 8. Queue List & Metric Widgets */
+.queue-table td {
+    padding: 0.6rem 0.9rem;
+}
+
+.queue-count {
+    font-weight: 700;
+    text-align: right;
+    color: #1f618d;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.stat-box {
+    padding: 0.75rem 0.5rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+.stat-number {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f618d;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* 9. Forms & Inputs */
+.form-group {
+    margin-bottom: 1.1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #1e293b;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-control:focus {
+    border-color: #1f618d;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(31, 97, 141, 0.15);
+}
+
+.form-control[readonly] {
+    background-color: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* Alerts */
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.88rem;
+}
+
+.alert-success {
+    background-color: #e6f4ea;
+    color: #137333;
+    border: 1px solid #ceead6;
+}
+
+.alert-error {
+    background-color: #fce8e6;
+    color: #c5221f;
+    border: 1px solid #fad2cf;
+}
+
+/* 10. Ticket Details View */
+.ticket-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    background-color: #f8fafc;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.25rem;
+}
+
+.meta-item-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.meta-item-value {
+    font-size: 0.95rem;
+    color: #1e293b;
+    font-weight: 500;
+    margin-top: 0.15rem;
+}
+
+.ticket-description-box {
+    background: #ffffff;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    color: #334155;
+}
+
+/* 11. Footer */
+.site-footer {
+    background-color: #ffffff;
+    border-top: 1px solid #dce2e6;
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: auto;
+}
+
+/* 12. Responsive behavior */
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .top-nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .nav-right {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
