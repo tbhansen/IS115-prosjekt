@@ -18,12 +18,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST["username"] ?? "");
     $password = $_POST["password"] ?? "";
 
+    // Look up the user in the database
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Verify password against stored hash
     if ($user && password_verify($password, $user["password_hash"])) {
-        // Save user information in session
+        // Save user info in session to keep them logged in
         $_SESSION["user_id"] = $user["id"];
         $_SESSION["username"] = $user["username"];
         $_SESSION["name"] = $user["name"];
