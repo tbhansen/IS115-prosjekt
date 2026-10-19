@@ -10,14 +10,16 @@ $message = "";
 $messageType = "";
 $submittedTicketId = null;
 
+// Handle customer support form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Read and trim customer inputs
     $customer_name  = trim($_POST["customer_name"] ?? "");
     $customer_email = trim($_POST["customer_email"] ?? "");
     $customer_phone = trim($_POST["customer_phone"] ?? "");
     $title          = trim($_POST["title"] ?? "");
     $description    = trim($_POST["description"] ?? "");
 
-    // Validation
+    // Validate required fields and email format
     if (empty($customer_name) || empty($customer_email) || empty($title) || empty($description)) {
         $message = "Please fill in all required fields (Name, Email, Subject, and Description).";
         $messageType = "error";
@@ -25,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = "Please provide a valid email address.";
         $messageType = "error";
     } else {
-        // Insert customer ticket with created_by = NULL (customer submission)
+        // Save new ticket with status 'open' and created_by = NULL (customer request)
         $stmt = $pdo->prepare(
             "INSERT INTO tickets (title, description, customer_name, customer_email, customer_phone, status, created_by)
              VALUES (?, ?, ?, ?, ?, 'open', NULL)"
@@ -39,6 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $customer_phone ?: null
         ]);
 
+        // Retrieve generated ticket ID to show reference confirmation
         $submittedTicketId = $pdo->lastInsertId();
         $message = "Thank you! Your support request has been submitted successfully.";
         $messageType = "success";

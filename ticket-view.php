@@ -11,7 +11,7 @@ if (!isset($_SESSION["user_id"])) {
     exit;
 }
 
-// Check that a valid ticket ID was provided
+// Check that a valid numeric ticket ID was provided in the URL
 if (!isset($_GET["id"]) || !is_numeric($_GET["id"])) {
     header("Location: tickets.php");
     exit;
@@ -26,9 +26,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_ticket"])) {
     $newStatus = $_POST["status"] ?? "open";
     $newAssignedTo = !empty($_POST["assigned_to"]) ? (int)$_POST["assigned_to"] : null;
 
-    // Validate allowed status values
+    // Validate that the submitted status is an allowed value
     $allowedStatuses = ["open", "in_progress", "closed"];
     if (in_array($newStatus, $allowedStatuses, true)) {
+        // Save new status and assigned staff member
         $updateStmt = $pdo->prepare(
             "UPDATE tickets SET status = ?, assigned_to = ? WHERE id = ?"
         );
@@ -39,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_ticket"])) {
     }
 }
 
-// Fetch ticket details with customer info, assigned staff, and creator staff
+// Fetch ticket details with joined names for assigned staff and ticket creator
 $stmt = $pdo->prepare(
     "SELECT
         tickets.*,
@@ -55,6 +56,7 @@ $stmt = $pdo->prepare(
 $stmt->execute([$id]);
 $ticket = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Stop execution if no ticket exists with this ID
 if (!$ticket) {
     die("Ticket not found. <a href='tickets.php'>Return to dashboard</a>");
 }

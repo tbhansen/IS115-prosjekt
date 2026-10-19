@@ -14,7 +14,7 @@ if (!isset($_SESSION["user_id"])) {
 $pageTitle = "Staff Dashboard";
 $currentUserId = $_SESSION["user_id"];
 
-// 1. Fetch tickets assigned to the logged-in staff member
+// 1. Fetch newest tickets assigned to the logged-in staff member
 $stmtOwned = $pdo->prepare(
     "SELECT * FROM tickets 
      WHERE assigned_to = ? 
@@ -24,7 +24,7 @@ $stmtOwned = $pdo->prepare(
 $stmtOwned->execute([$currentUserId]);
 $ownedTickets = $stmtOwned->fetchAll(PDO::FETCH_ASSOC);
 
-// 2. Fetch newest unassigned tickets (unowned)
+// 2. Fetch newest unassigned tickets (need attention)
 $stmtUnassigned = $pdo->query(
     "SELECT * FROM tickets 
      WHERE assigned_to IS NULL 
@@ -33,7 +33,7 @@ $stmtUnassigned = $pdo->query(
 );
 $unassignedTickets = $stmtUnassigned->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Fetch all tickets for the complete overview with assigned staff name
+// 3. Fetch all tickets with staff names for the full overview table
 $stmtAll = $pdo->query(
     "SELECT tickets.*, 
             assignee.name AS assigned_to_name,
@@ -45,7 +45,7 @@ $stmtAll = $pdo->query(
 );
 $allTickets = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
 
-// 4. Status counts for the Queue list widget
+// 4. Count tickets by status for the quick status sidebar widget
 $countOpen = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'open'")->fetchColumn();
 $countInProgress = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'in_progress'")->fetchColumn();
 $countClosed = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'closed'")->fetchColumn();

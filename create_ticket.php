@@ -19,7 +19,9 @@ $messageType = "";
 $staffStmt = $pdo->query("SELECT id, name, username FROM users ORDER BY name ASC");
 $staffMembers = $staffStmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Handle manual ticket submission by staff
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Read and trim form inputs
     $customer_name  = trim($_POST["customer_name"] ?? "");
     $customer_email = trim($_POST["customer_email"] ?? "");
     $customer_phone = trim($_POST["customer_phone"] ?? "");
@@ -29,6 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $assigned_to    = !empty($_POST["assigned_to"]) ? (int)$_POST["assigned_to"] : null;
     $created_by     = $_SESSION["user_id"];
 
+    // Validate inputs
     if (empty($customer_name) || empty($customer_email) || empty($title) || empty($description)) {
         $message = "Please fill in all required fields (Customer Name, Email, Subject, Description).";
         $messageType = "error";
@@ -36,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = "Please enter a valid customer email address.";
         $messageType = "error";
     } else {
+        // Insert ticket logged by current staff member
         $stmt = $pdo->prepare(
             "INSERT INTO tickets (title, description, customer_name, customer_email, customer_phone, status, created_by, assigned_to)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -52,6 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $assigned_to
         ]);
 
+        // Redirect directly to the newly created ticket's detail view
         $newTicketId = $pdo->lastInsertId();
         header("Location: ticket-view.php?id=" . $newTicketId . "&created=1");
         exit;

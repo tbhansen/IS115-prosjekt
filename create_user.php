@@ -9,16 +9,19 @@ $pageTitle = "Create User";
 $message = "";
 $messageType = "";
 
+// Handle registration form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Read and trim submitted form fields
     $name = trim($_POST["name"] ?? "");
     $username = trim($_POST["username"] ?? "");
     $password = $_POST["password"] ?? "";
 
+    // Check that all required fields have text
     if (empty($name) || empty($username) || empty($password)) {
         $message = "Please fill in all fields.";
         $messageType = "error";
     } else {
-        // Check if username is already taken
+        // Check if username is already registered in DB
         $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $existingUser = $stmt->fetch();
@@ -27,10 +30,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $message = "Username is already registered. Please choose another.";
             $messageType = "error";
         } else {
-            // Hash password securely
+            // Hash password securely (one-way encryption)
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-            // Insert new user
+            // Insert new staff user record
             $stmt = $pdo->prepare(
                 "INSERT INTO users (name, username, password_hash) VALUES (?, ?, ?)"
             );
