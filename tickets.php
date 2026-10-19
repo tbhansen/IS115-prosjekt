@@ -286,17 +286,6 @@ require_once "header.php";
             </div>
         </div>
 
-        <!-- System info -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Role Information</span>
-            </div>
-            <div class="card-body" style="font-size: 0.85rem; color: #475569; line-height: 1.6;">
-                <p><strong>Customer Portal:</strong> Customers use the public form at <code>index.php</code> without needing an account.</p>
-                <p style="margin-top: 0.5rem;"><strong>Staff Portal:</strong> Staff members log in to manage tickets, change statuses, and reassign cases.</p>
-            </div>
-        </div>
-
     </div>
 
 </div>
