@@ -3,6 +3,8 @@ session_start();
 
 require_once "db.php";
 
+/** @var PDO $pdo */
+
 $pageTitle = "Create User";
 $message = "";
 $messageType = "";

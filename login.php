@@ -3,6 +3,8 @@ session_start();
 
 require_once "db.php";
 
+/** @var PDO $pdo */
+
 // If already logged in, redirect directly to dashboard
 if (isset($_SESSION["user_id"])) {
     header("Location: tickets.php");

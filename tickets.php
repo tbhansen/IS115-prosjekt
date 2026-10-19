@@ -3,6 +3,8 @@ session_start();
 
 require_once "db.php";
 
+/** @var PDO $pdo */
+
 // Redirect to login if user is not authenticated as staff
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
