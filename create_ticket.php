@@ -1,27 +1,27 @@
 <?php
-session_start();
+/**
+ * create_ticket.php
+ * 
+ * Internt skjema for saksbehandlere til å opprette nye saker manuelt
+ * (for eksempel ved henvendelser mottatt via telefon eller direkte kontakt).
+ */
 
-require_once "db.php";
+require_once __DIR__ . "/includes/db.php";
+require_once __DIR__ . "/includes/functions.php";
 
-/** @var PDO $pdo */
-
-// Ensure staff is logged in
-if (!isset($_SESSION["user_id"])) {
-    header("Location: login.php");
-    exit;
-}
+// Krever at brukeren er innlogget som ansatt
+require_login();
 
 $pageTitle = "Create Ticket (Staff)";
 $message = "";
 $messageType = "";
 
-// Fetch list of staff members for the "Assign To" dropdown
-$staffStmt = $pdo->query("SELECT id, name, username FROM users ORDER BY name ASC");
-$staffMembers = $staffStmt->fetchAll(PDO::FETCH_ASSOC);
+// Hent ansatte for tildelingsmenyen
+$staffMembers = get_all_staff($pdo);
 
-// Handle manual ticket submission by staff
+// Behandle innsending av saken (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Read and trim form inputs
+    // Les og trim skjemafelter
     $customer_name  = trim($_POST["customer_name"] ?? "");
     $customer_email = trim($_POST["customer_email"] ?? "");
     $customer_phone = trim($_POST["customer_phone"] ?? "");
@@ -29,9 +29,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $description    = trim($_POST["description"] ?? "");
     $status         = $_POST["status"] ?? "open";
     $assigned_to    = !empty($_POST["assigned_to"]) ? (int)$_POST["assigned_to"] : null;
-    $created_by     = $_SESSION["user_id"];
+    $created_by     = get_logged_in_user_id();
 
-    // Validate inputs
+    // Valider obligatoriske felter
     if (empty($customer_name) || empty($customer_email) || empty($title) || empty($description)) {
         $message = "Please fill in all required fields (Customer Name, Email, Subject, Description).";
         $messageType = "error";
@@ -39,31 +39,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = "Please enter a valid customer email address.";
         $messageType = "error";
     } else {
-        // Insert ticket logged by current staff member
-        $stmt = $pdo->prepare(
-            "INSERT INTO tickets (title, description, customer_name, customer_email, customer_phone, status, created_by, assigned_to)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        );
-
-        $stmt->execute([
+        // Opprett saken i databasen ved hjelp av gjenbrukbar funksjon
+        $newTicketId = create_staff_ticket(
+            $pdo,
             $title,
             $description,
             $customer_name,
             $customer_email,
-            $customer_phone ?: null,
+            $customer_phone,
             $status,
-            $created_by,
-            $assigned_to
-        ]);
+            $assigned_to,
+            $created_by
+        );
 
-        // Redirect directly to the newly created ticket's detail view
-        $newTicketId = $pdo->lastInsertId();
-        header("Location: ticket-view.php?id=" . $newTicketId . "&created=1");
+        // Videresend direkte til sakens detaljvisning
+        header("Location: ticket_view.php?id=" . $newTicketId . "&created=1");
         exit;
     }
 }
 
-require_once "header.php";
+require_once __DIR__ . "/includes/header.php";
 ?>
 
 <div class="page-header">
@@ -82,8 +77,8 @@ require_once "header.php";
         <div class="card-body">
 
             <?php if (!empty($message)): ?>
-                <div class="alert alert-<?php echo $messageType; ?>">
-                    <?php echo htmlspecialchars($message); ?>
+                <div class="alert alert-<?php echo e($messageType); ?>">
+                    <?php echo e($message); ?>
                 </div>
             <?php endif; ?>
 
@@ -101,7 +96,7 @@ require_once "header.php";
                             id="customer_name" 
                             name="customer_name" 
                             class="form-control" 
-                            value="<?php echo htmlspecialchars($_POST["customer_name"] ?? ""); ?>" 
+                            value="<?php echo e($_POST["customer_name"] ?? ""); ?>" 
                             placeholder="e.g. John Doe" 
                             required>
                     </div>
@@ -113,7 +108,7 @@ require_once "header.php";
                             id="customer_email" 
                             name="customer_email" 
                             class="form-control" 
-                            value="<?php echo htmlspecialchars($_POST["customer_email"] ?? ""); ?>" 
+                            value="<?php echo e($_POST["customer_email"] ?? ""); ?>" 
                             placeholder="john@example.com" 
                             required>
                     </div>
@@ -126,7 +121,7 @@ require_once "header.php";
                         id="customer_phone" 
                         name="customer_phone" 
                         class="form-control" 
-                        value="<?php echo htmlspecialchars($_POST["customer_phone"] ?? ""); ?>" 
+                        value="<?php echo e($_POST["customer_phone"] ?? ""); ?>" 
                         placeholder="+47 00 00 00 00">
                 </div>
 
@@ -141,7 +136,7 @@ require_once "header.php";
                         id="title" 
                         name="title" 
                         class="form-control" 
-                        value="<?php echo htmlspecialchars($_POST["title"] ?? ""); ?>" 
+                        value="<?php echo e($_POST["title"] ?? ""); ?>" 
                         placeholder="Brief summary of the issue..." 
                         required>
                 </div>
@@ -161,8 +156,8 @@ require_once "header.php";
                         <select id="assigned_to" name="assigned_to" class="form-control">
                             <option value="">-- Unassigned --</option>
                             <?php foreach ($staffMembers as $member): ?>
-                                <option value="<?php echo $member['id']; ?>" <?php echo ($member['id'] == $_SESSION['user_id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($member['name']); ?> (<?php echo htmlspecialchars($member['username']); ?>)
+                                <option value="<?php echo e($member['id']); ?>" <?php echo ($member['id'] == get_logged_in_user_id()) ? 'selected' : ''; ?>>
+                                    <?php echo e($member['name']); ?> (<?php echo e($member['username']); ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -177,7 +172,7 @@ require_once "header.php";
                         rows="5" 
                         class="form-control" 
                         placeholder="Enter the customer inquiry or case details..." 
-                        required><?php echo htmlspecialchars($_POST["description"] ?? ""); ?></textarea>
+                        required><?php echo e($_POST["description"] ?? ""); ?></textarea>
                 </div>
 
                 <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
@@ -191,5 +186,5 @@ require_once "header.php";
 </div>
 
 <?php
-require_once "footer.php";
+require_once __DIR__ . "/includes/footer.php";
 ?>

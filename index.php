@@ -1,57 +1,56 @@
 <?php
-session_start();
+/**
+ * index.php
+ * 
+ * Offentlig forside for Ticketheaven.
+ * Lar kunder sende inn supporthenvendelser uten å måtte logge inn.
+ */
 
-require_once "db.php";
-
-/** @var PDO $pdo */
+require_once __DIR__ . "/includes/db.php";
+require_once __DIR__ . "/includes/functions.php";
 
 $pageTitle = "Customer Support - Submit a Request";
 $message = "";
 $messageType = "";
 $submittedTicketId = null;
 
-// Handle customer support form submission
+// Behandle innsending av kontaktskjemaet (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Read and trim customer inputs
+    // Les og trim skjemafelter
     $customer_name  = trim($_POST["customer_name"] ?? "");
     $customer_email = trim($_POST["customer_email"] ?? "");
     $customer_phone = trim($_POST["customer_phone"] ?? "");
     $title          = trim($_POST["title"] ?? "");
     $description    = trim($_POST["description"] ?? "");
 
-    // Validate required fields and email format
+    // Valider at påkrevde felter er fylt ut
     if (empty($customer_name) || empty($customer_email) || empty($title) || empty($description)) {
         $message = "Please fill in all required fields (Name, Email, Subject, and Description).";
         $messageType = "error";
     } elseif (!filter_var($customer_email, FILTER_VALIDATE_EMAIL)) {
+        // Valider e-postformat
         $message = "Please provide a valid email address.";
         $messageType = "error";
     } else {
-        // Save new ticket with status 'open' and created_by = NULL (customer request)
-        $stmt = $pdo->prepare(
-            "INSERT INTO tickets (title, description, customer_name, customer_email, customer_phone, status, created_by)
-             VALUES (?, ?, ?, ?, ?, 'open', NULL)"
-        );
-
-        $stmt->execute([
+        // Opprett saken i databasen ved hjelp av den gjenbrukbare funksjonen
+        $submittedTicketId = create_customer_ticket(
+            $pdo,
             $title,
             $description,
             $customer_name,
             $customer_email,
-            $customer_phone ?: null
-        ]);
+            $customer_phone
+        );
 
-        // Retrieve generated ticket ID to show reference confirmation
-        $submittedTicketId = $pdo->lastInsertId();
         $message = "Thank you! Your support request has been submitted successfully.";
         $messageType = "success";
     }
 }
 
-require_once "header.php";
+require_once __DIR__ . "/includes/header.php";
 ?>
 
-<?php if (isset($_SESSION["user_id"])): ?>
+<?php if (is_logged_in()): ?>
     <div style="background-color: #e0f2fe; border: 1px solid #bae6fd; padding: 0.6rem 1rem; border-radius: 4px; margin-bottom: 1.25rem; font-size: 0.88rem; color: #0369a1; display: flex; justify-content: space-between; align-items: center;">
         <span>You are currently viewing the customer intake form while logged in as staff.</span>
         <a href="tickets.php" class="btn btn-primary btn-sm">&larr; Return to Staff Dashboard</a>
@@ -68,15 +67,15 @@ require_once "header.php";
 <div style="max-width: 780px; margin: 0 auto;">
 
     <?php if ($submittedTicketId): ?>
-        <!-- Success Confirmation Card -->
+        <!-- Kvittering for innsendt sak -->
         <div class="card" style="border-top: 4px solid #137333;">
             <div class="card-header">
-                <span class="card-title" style="color: #137333;">&#10003; Ticket #<?php echo htmlspecialchars($submittedTicketId); ?> Received</span>
+                <span class="card-title" style="color: #137333;">&#10003; Ticket #<?php echo e($submittedTicketId); ?> Received</span>
             </div>
             <div class="card-body">
-                <p><strong><?php echo htmlspecialchars($message); ?></strong></p>
+                <p><strong><?php echo e($message); ?></strong></p>
                 <p style="margin-top: 0.5rem; color: #475569;">
-                    A confirmation has been logged for <strong><?php echo htmlspecialchars($customer_email); ?></strong>.
+                    A confirmation has been logged for <strong><?php echo e($customer_email); ?></strong>.
                     Our staff will review your case and respond as soon as possible.
                 </p>
                 <div style="margin-top: 1.5rem;">
@@ -87,7 +86,7 @@ require_once "header.php";
 
     <?php else: ?>
 
-        <!-- Customer Intake Form -->
+        <!-- Hovedskjema for henvendelser -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Contact &amp; Support Request Form</span>
@@ -95,8 +94,8 @@ require_once "header.php";
             <div class="card-body">
 
                 <?php if (!empty($message)): ?>
-                    <div class="alert alert-<?php echo $messageType; ?>">
-                        <?php echo htmlspecialchars($message); ?>
+                    <div class="alert alert-<?php echo e($messageType); ?>">
+                        <?php echo e($message); ?>
                     </div>
                 <?php endif; ?>
 
@@ -113,7 +112,7 @@ require_once "header.php";
                                 id="customer_name" 
                                 name="customer_name" 
                                 class="form-control" 
-                                value="<?php echo htmlspecialchars($_POST["customer_name"] ?? ""); ?>" 
+                                value="<?php echo e($_POST["customer_name"] ?? ""); ?>" 
                                 placeholder="e.g. Kari Nordmann" 
                                 required>
                         </div>
@@ -125,7 +124,7 @@ require_once "header.php";
                                 id="customer_email" 
                                 name="customer_email" 
                                 class="form-control" 
-                                value="<?php echo htmlspecialchars($_POST["customer_email"] ?? ""); ?>" 
+                                value="<?php echo e($_POST["customer_email"] ?? ""); ?>" 
                                 placeholder="name@example.com" 
                                 required>
                         </div>
@@ -138,7 +137,7 @@ require_once "header.php";
                             id="customer_phone" 
                             name="customer_phone" 
                             class="form-control" 
-                            value="<?php echo htmlspecialchars($_POST["customer_phone"] ?? ""); ?>" 
+                            value="<?php echo e($_POST["customer_phone"] ?? ""); ?>" 
                             placeholder="+47 12 34 56 78">
                     </div>
 
@@ -153,7 +152,7 @@ require_once "header.php";
                             id="title" 
                             name="title" 
                             class="form-control" 
-                            value="<?php echo htmlspecialchars($_POST["title"] ?? ""); ?>" 
+                            value="<?php echo e($_POST["title"] ?? ""); ?>" 
                             placeholder="Brief summary of your question or issue" 
                             required>
                     </div>
@@ -166,7 +165,7 @@ require_once "header.php";
                             rows="6" 
                             class="form-control" 
                             placeholder="Please describe the issue or question with as much detail as possible..." 
-                            required><?php echo htmlspecialchars($_POST["description"] ?? ""); ?></textarea>
+                            required><?php echo e($_POST["description"] ?? ""); ?></textarea>
                     </div>
 
                     <div style="margin-top: 1.5rem;">
@@ -184,5 +183,5 @@ require_once "header.php";
 </div>
 
 <?php
-require_once "footer.php";
+require_once __DIR__ . "/includes/footer.php";
 ?>

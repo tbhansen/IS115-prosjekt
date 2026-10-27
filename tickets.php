@@ -1,57 +1,33 @@
 <?php
-session_start();
+/**
+ * tickets.php
+ * 
+ * Internt dashbord for saksbehandlere (Staff Dashboard).
+ * Gir full oversikt over egne saker, ufordelte saker, alle saker og status-statistikk.
+ */
 
-require_once "db.php";
+require_once __DIR__ . "/includes/db.php";
+require_once __DIR__ . "/includes/functions.php";
 
-/** @var PDO $pdo */
-
-// Redirect to login if user is not authenticated as staff
-if (!isset($_SESSION["user_id"])) {
-    header("Location: login.php");
-    exit;
-}
+// Krever at brukeren er innlogget som ansatt
+require_login();
 
 $pageTitle = "Staff Dashboard";
-$currentUserId = $_SESSION["user_id"];
+$currentUserId = get_logged_in_user_id();
 
-// 1. Fetch newest tickets assigned to the logged-in staff member
-$stmtOwned = $pdo->prepare(
-    "SELECT * FROM tickets 
-     WHERE assigned_to = ? 
-     ORDER BY created_at DESC 
-     LIMIT 10"
-);
-$stmtOwned->execute([$currentUserId]);
-$ownedTickets = $stmtOwned->fetchAll(PDO::FETCH_ASSOC);
+// 1. Hent saker tildelt innlogget saksbehandler
+$ownedTickets = get_tickets_assigned_to($pdo, $currentUserId);
 
-// 2. Fetch newest unassigned tickets (need attention)
-$stmtUnassigned = $pdo->query(
-    "SELECT * FROM tickets 
-     WHERE assigned_to IS NULL 
-     ORDER BY created_at DESC 
-     LIMIT 10"
-);
-$unassignedTickets = $stmtUnassigned->fetchAll(PDO::FETCH_ASSOC);
+// 2. Hent ufordelte saker som venter på oppfølging
+$unassignedTickets = get_unassigned_tickets($pdo);
 
-// 3. Fetch all tickets with staff names for the full overview table
-$stmtAll = $pdo->query(
-    "SELECT tickets.*, 
-            assignee.name AS assigned_to_name,
-            creator.name AS created_by_staff_name
-     FROM tickets 
-     LEFT JOIN users AS assignee ON tickets.assigned_to = assignee.id
-     LEFT JOIN users AS creator ON tickets.created_by = creator.id
-     ORDER BY tickets.created_at DESC"
-);
-$allTickets = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
+// 3. Hent alle saker med tilknyttet saksbehandlernavn
+$allTickets = get_all_tickets($pdo);
 
-// 4. Count tickets by status for the quick status sidebar widget
-$countOpen = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'open'")->fetchColumn();
-$countInProgress = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'in_progress'")->fetchColumn();
-$countClosed = (int)$pdo->query("SELECT COUNT(*) FROM tickets WHERE status = 'closed'")->fetchColumn();
-$countTotal = $countOpen + $countInProgress + $countClosed;
+// 4. Hent statistikk over saker fordelt på status
+$statusCounts = get_ticket_status_counts($pdo);
 
-require_once "header.php";
+require_once __DIR__ . "/includes/header.php";
 ?>
 
 <div class="page-header">
@@ -64,18 +40,16 @@ require_once "header.php";
     </div>
 </div>
 
-<!-- Two-column dashboard layout inspired by Request Tracker (RT) -->
+<!-- To-kolonners layout for dashbord -->
 <div class="dashboard-grid">
 
-    <!-- LEFT COLUMN: Main Ticket Lists -->
+    <!-- VENSTRE KOLONNE: Hovedlister med saker -->
     <div class="dashboard-column">
 
-        <!-- Widget 1: Tickets assigned to me -->
+        <!-- Modul 1: Saker tildelt meg -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">
-                    &#9662; Tickets Assigned to Me
-                </span>
+                <span class="card-title">&#9662; Tickets Assigned to Me</span>
                 <span class="card-count">(Found <?php echo count($ownedTickets); ?> <?php echo count($ownedTickets) === 1 ? 'ticket' : 'tickets'; ?>)</span>
             </div>
             <div class="card-body-table table-responsive">
@@ -97,21 +71,15 @@ require_once "header.php";
                         <?php else: ?>
                             <?php foreach ($ownedTickets as $ticket): ?>
                                 <tr>
-                                    <td><strong><?php echo htmlspecialchars($ticket["id"]); ?></strong></td>
+                                    <td><strong><?php echo e($ticket["id"]); ?></strong></td>
                                     <td>
-                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo htmlspecialchars($ticket["id"]); ?>">
-                                            <?php echo htmlspecialchars($ticket["title"]); ?>
+                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>">
+                                            <?php echo e($ticket["title"]); ?>
                                         </a>
                                     </td>
-                                    <td>
-                                        <?php echo htmlspecialchars($ticket["customer_name"]); ?>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
-                                            <?php echo htmlspecialchars(str_replace('_', ' ', $ticket["status"])); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo date('d-m-Y H:i', strtotime($ticket["created_at"])); ?></td>
+                                    <td><?php echo e($ticket["customer_name"]); ?></td>
+                                    <td><?php echo render_status_badge($ticket["status"]); ?></td>
+                                    <td><?php echo format_datetime($ticket["created_at"]); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -120,12 +88,10 @@ require_once "header.php";
             </div>
         </div>
 
-        <!-- Widget 2: Newest unowned tickets -->
+        <!-- Modul 2: Ufordelte saker (trenger oppfølging) -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">
-                    &#9662; Unassigned Tickets (Need Attention)
-                </span>
+                <span class="card-title">&#9662; Unassigned Tickets (Need Attention)</span>
                 <span class="card-count">(Found <?php echo count($unassignedTickets); ?> <?php echo count($unassignedTickets) === 1 ? 'ticket' : 'tickets'; ?>)</span>
             </div>
             <div class="card-body-table table-responsive">
@@ -148,24 +114,20 @@ require_once "header.php";
                         <?php else: ?>
                             <?php foreach ($unassignedTickets as $ticket): ?>
                                 <tr>
-                                    <td><strong><?php echo htmlspecialchars($ticket["id"]); ?></strong></td>
+                                    <td><strong><?php echo e($ticket["id"]); ?></strong></td>
                                     <td>
-                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo htmlspecialchars($ticket["id"]); ?>">
-                                            <?php echo htmlspecialchars($ticket["title"]); ?>
+                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>">
+                                            <?php echo e($ticket["title"]); ?>
                                         </a>
                                     </td>
                                     <td>
-                                        <?php echo htmlspecialchars($ticket["customer_name"]); ?><br>
-                                        <small style="color: #64748b;"><?php echo htmlspecialchars($ticket["customer_email"]); ?></small>
+                                        <?php echo e($ticket["customer_name"]); ?><br>
+                                        <small style="color: #64748b;"><?php echo e($ticket["customer_email"]); ?></small>
                                     </td>
+                                    <td><?php echo render_status_badge($ticket["status"]); ?></td>
+                                    <td><?php echo format_datetime($ticket["created_at"]); ?></td>
                                     <td>
-                                        <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
-                                            <?php echo htmlspecialchars(str_replace('_', ' ', $ticket["status"])); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo date('d-m-Y H:i', strtotime($ticket["created_at"])); ?></td>
-                                    <td>
-                                        <a href="ticket-view.php?id=<?php echo htmlspecialchars($ticket["id"]); ?>" class="btn btn-outline btn-sm">
+                                        <a href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>" class="btn btn-outline btn-sm">
                                             Open
                                         </a>
                                     </td>
@@ -177,12 +139,10 @@ require_once "header.php";
             </div>
         </div>
 
-        <!-- Widget 3: All Tickets -->
+        <!-- Modul 3: Alle saker i systemet -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">
-                    &#9662; All Tickets Overview
-                </span>
+                <span class="card-title">&#9662; All Tickets Overview</span>
                 <span class="card-count">(Total <?php echo count($allTickets); ?>)</span>
             </div>
             <div class="card-body-table table-responsive">
@@ -205,28 +165,22 @@ require_once "header.php";
                         <?php else: ?>
                             <?php foreach ($allTickets as $ticket): ?>
                                 <tr>
-                                    <td><strong><?php echo htmlspecialchars($ticket["id"]); ?></strong></td>
+                                    <td><strong><?php echo e($ticket["id"]); ?></strong></td>
                                     <td>
-                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo htmlspecialchars($ticket["id"]); ?>">
-                                            <?php echo htmlspecialchars($ticket["title"]); ?>
+                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>">
+                                            <?php echo e($ticket["title"]); ?>
                                         </a>
                                     </td>
-                                    <td>
-                                        <?php echo htmlspecialchars($ticket["customer_name"]); ?>
-                                    </td>
+                                    <td><?php echo e($ticket["customer_name"]); ?></td>
                                     <td>
                                         <?php if (!empty($ticket["assigned_to_name"])): ?>
-                                            <?php echo htmlspecialchars($ticket["assigned_to_name"]); ?>
+                                            <?php echo e($ticket["assigned_to_name"]); ?>
                                         <?php else: ?>
                                             <span style="color: #94a3b8; font-style: italic;">Unassigned</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td>
-                                        <span class="badge badge-<?php echo htmlspecialchars($ticket["status"]); ?>">
-                                            <?php echo htmlspecialchars(str_replace('_', ' ', $ticket["status"])); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo date('d-m-Y H:i', strtotime($ticket["created_at"])); ?></td>
+                                    <td><?php echo render_status_badge($ticket["status"]); ?></td>
+                                    <td><?php echo format_datetime($ticket["created_at"]); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -237,10 +191,10 @@ require_once "header.php";
 
     </div>
 
-    <!-- RIGHT COLUMN: Queue stats & quick widgets -->
+    <!-- HØYRE KOLONNE: Statistikk og hurtighandlinger -->
     <div class="dashboard-column">
 
-        <!-- Queue Status Summary Widget -->
+        <!-- Modul: Kø- og statusoversikt -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Queue Status</span>
@@ -256,26 +210,26 @@ require_once "header.php";
                     <tbody>
                         <tr>
                             <td><span class="badge badge-open">Open</span></td>
-                            <td class="queue-count"><?php echo $countOpen; ?></td>
+                            <td class="queue-count"><?php echo $statusCounts["open"]; ?></td>
                         </tr>
                         <tr>
                             <td><span class="badge badge-in_progress">In Progress</span></td>
-                            <td class="queue-count"><?php echo $countInProgress; ?></td>
+                            <td class="queue-count"><?php echo $statusCounts["in_progress"]; ?></td>
                         </tr>
                         <tr>
                             <td><span class="badge badge-closed">Closed</span></td>
-                            <td class="queue-count"><?php echo $countClosed; ?></td>
+                            <td class="queue-count"><?php echo $statusCounts["closed"]; ?></td>
                         </tr>
                         <tr style="background-color: #f8fafc; font-weight: bold;">
                             <td>Total tickets</td>
-                            <td class="queue-count"><?php echo $countTotal; ?></td>
+                            <td class="queue-count"><?php echo $statusCounts["total"]; ?></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Quick actions widget -->
+        <!-- Modul: Hurtighandlinger -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Quick Actions</span>
@@ -293,5 +247,5 @@ require_once "header.php";
 </div>
 
 <?php
-require_once "footer.php";
+require_once __DIR__ . "/includes/footer.php";
 ?>

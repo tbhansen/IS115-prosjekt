@@ -1,12 +1,16 @@
 <?php
-session_start();
+/**
+ * login.php
+ * 
+ * Innloggingsside for ansatte / saksbehandlere.
+ * Verifiserer passord mot sikker bcrypt-hash i databasen og starter en sesjon.
+ */
 
-require_once "db.php";
+require_once __DIR__ . "/includes/db.php";
+require_once __DIR__ . "/includes/functions.php";
 
-/** @var PDO $pdo */
-
-// If already logged in, redirect directly to dashboard
-if (isset($_SESSION["user_id"])) {
+// Dersom brukeren allerede er innlogget, send direkte til saksdashbordet
+if (is_logged_in()) {
     header("Location: tickets.php");
     exit;
 }
@@ -14,31 +18,36 @@ if (isset($_SESSION["user_id"])) {
 $pageTitle = "Login";
 $error = "";
 
+// Behandle innloggingsforsøk (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST["username"] ?? "");
     $password = $_POST["password"] ?? "";
 
-    // Look up the user in the database
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // Verify password against stored hash
-    if ($user && password_verify($password, $user["password_hash"])) {
-        // Save user info in session to keep them logged in
-        $_SESSION["user_id"] = $user["id"];
-        $_SESSION["username"] = $user["username"];
-        $_SESSION["name"] = $user["name"];
-
-        // Redirect to tickets dashboard
-        header("Location: tickets.php");
-        exit;
+    if (empty($username) || empty($password)) {
+        $error = "Please enter both username and password.";
     } else {
-        $error = "Invalid username or password.";
+        // Finn brukeren i databasen
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Verifiser passordet mot den lagrede hashen
+        if ($user && password_verify($password, $user["password_hash"])) {
+            // Lagre brukerinformasjon i sesjonen
+            $_SESSION["user_id"] = $user["id"];
+            $_SESSION["username"] = $user["username"];
+            $_SESSION["name"] = $user["name"];
+
+            // Videresend til dashbordet
+            header("Location: tickets.php");
+            exit;
+        } else {
+            $error = "Invalid username or password.";
+        }
     }
 }
 
-require_once "header.php";
+require_once __DIR__ . "/includes/header.php";
 ?>
 
 <div style="max-width: 440px; margin: 3rem auto;">
@@ -50,7 +59,7 @@ require_once "header.php";
 
             <?php if (!empty($error)): ?>
                 <div class="alert alert-error">
-                    <?php echo htmlspecialchars($error); ?>
+                    <?php echo e($error); ?>
                 </div>
             <?php endif; ?>
 
@@ -62,6 +71,7 @@ require_once "header.php";
                         id="username" 
                         name="username" 
                         class="form-control" 
+                        value="<?php echo e($_POST["username"] ?? ""); ?>"
                         required 
                         autofocus>
                 </div>
@@ -90,5 +100,5 @@ require_once "header.php";
 </div>
 
 <?php
-require_once "footer.php";
+require_once __DIR__ . "/includes/footer.php";
 ?>

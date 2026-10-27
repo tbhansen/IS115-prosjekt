@@ -1,27 +1,35 @@
 <?php
-session_start();
+/**
+ * create_user.php
+ * 
+ * Registrering av ny ansatt / saksbehandler.
+ * Validerer input, sjekker at brukernavnet er ledig,
+ * og lagrer passordet sikkert med password_hash().
+ */
 
-require_once "db.php";
-
-/** @var PDO $pdo */
+require_once __DIR__ . "/includes/db.php";
+require_once __DIR__ . "/includes/functions.php";
 
 $pageTitle = "Create User";
 $message = "";
 $messageType = "";
 
-// Handle registration form submission
+// Behandle registreringsskjemaet (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Read and trim submitted form fields
-    $name = trim($_POST["name"] ?? "");
+    // Les og trim skjemafelter
+    $name     = trim($_POST["name"] ?? "");
     $username = trim($_POST["username"] ?? "");
     $password = $_POST["password"] ?? "";
 
-    // Check that all required fields have text
+    // Sjekk at alle påkrevde felter er fylt ut
     if (empty($name) || empty($username) || empty($password)) {
         $message = "Please fill in all fields.";
         $messageType = "error";
+    } elseif (strlen($password) < 6) {
+        $message = "Password must be at least 6 characters long.";
+        $messageType = "error";
     } else {
-        // Check if username is already registered in DB
+        // Sjekk om brukernavnet allerede er i bruk
         $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $existingUser = $stmt->fetch();
@@ -30,14 +38,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $message = "Username is already registered. Please choose another.";
             $messageType = "error";
         } else {
-            // Hash password securely (one-way encryption)
+            // Hash passordet sikkert med standard hashing-algoritme (bcrypt)
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-            // Insert new staff user record
-            $stmt = $pdo->prepare(
+            // Sett inn den nye saksbehandleren i users-tabellen
+            $insertStmt = $pdo->prepare(
                 "INSERT INTO users (name, username, password_hash) VALUES (?, ?, ?)"
             );
-            $stmt->execute([$name, $username, $passwordHash]);
+            $insertStmt->execute([$name, $username, $passwordHash]);
 
             $message = "User created successfully! You can now log in.";
             $messageType = "success";
@@ -45,12 +53,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-require_once "header.php";
+require_once __DIR__ . "/includes/header.php";
 ?>
 
 <div class="page-header">
     <h1 class="page-title">Staff Registration</h1>
-    <?php if (isset($_SESSION["user_id"])): ?>
+    <?php if (is_logged_in()): ?>
         <a href="tickets.php" class="btn btn-outline">&larr; Back to Dashboard</a>
     <?php else: ?>
         <a href="login.php" class="btn btn-outline">&larr; Back to Login</a>
@@ -65,8 +73,8 @@ require_once "header.php";
         <div class="card-body">
 
             <?php if (!empty($message)): ?>
-                <div class="alert alert-<?php echo $messageType; ?>">
-                    <?php echo htmlspecialchars($message); ?>
+                <div class="alert alert-<?php echo e($messageType); ?>">
+                    <?php echo e($message); ?>
                 </div>
             <?php endif; ?>
 
@@ -78,6 +86,7 @@ require_once "header.php";
                         id="name" 
                         name="name" 
                         class="form-control" 
+                        value="<?php echo e($_POST["name"] ?? ""); ?>"
                         placeholder="e.g. Noah Smith" 
                         required>
                 </div>
@@ -89,6 +98,7 @@ require_once "header.php";
                         id="username" 
                         name="username" 
                         class="form-control" 
+                        value="<?php echo e($_POST["username"] ?? ""); ?>"
                         placeholder="Choose a username" 
                         required>
                 </div>
@@ -115,5 +125,5 @@ require_once "header.php";
 </div>
 
 <?php
-require_once "footer.php";
+require_once __DIR__ . "/includes/footer.php";
 ?>

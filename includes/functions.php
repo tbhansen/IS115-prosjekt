@@ -57,7 +57,7 @@ function render_status_badge(string $status): string
         case "open":
             return '<span class="badge badge-open">Open</span>';
         case "in_progress":
-            return '<span class="badge badge-progress">In Progress</span>';
+            return '<span class="badge badge-in_progress">In Progress</span>';
         case "closed":
             return '<span class="badge badge-closed">Closed</span>';
         default:
