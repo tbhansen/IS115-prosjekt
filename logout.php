@@ -2,18 +2,18 @@
 /**
  * logout.php
  * 
- * Logger ut saksbehandleren ved å tømme og slette sesjonen,
- * og videresender deretter brukeren tilbake til forsiden.
+ * Logs out the staff member by clearing session variables, destroying the session,
+ * and redirecting back to the public homepage.
  */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Tøm alle sesjonsvariabler
+// Clear all session variables
 $_SESSION = [];
 
-// Slett sesjons-cookie dersom den eksisterer
+// Delete session cookie if present
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(
@@ -27,9 +27,9 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// Avslutt og ødelegg sesjonen
+// Destroy session data on server
 session_destroy();
 
-// Videresend til offentlig forside
+// Redirect to public homepage
 header("Location: index.php");
 exit;

@@ -2,29 +2,29 @@
 /**
  * tickets.php
  * 
- * Internt dashbord for saksbehandlere (Staff Dashboard).
- * Gir full oversikt over egne saker, ufordelte saker, alle saker og status-statistikk.
+ * Internal staff dashboard.
+ * Provides an overview of owned tickets, unassigned tickets, all tickets, and queue status.
  */
 
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/functions.php";
 
-// Krever at brukeren er innlogget som ansatt
+// Require user to be logged in as staff
 require_login();
 
 $pageTitle = "Staff Dashboard";
 $currentUserId = get_logged_in_user_id();
 
-// 1. Hent saker tildelt innlogget saksbehandler
+// 1. Fetch tickets assigned to the logged-in staff member
 $ownedTickets = get_tickets_assigned_to($pdo, $currentUserId);
 
-// 2. Hent ufordelte saker som venter på oppfølging
+// 2. Fetch unassigned tickets awaiting attention
 $unassignedTickets = get_unassigned_tickets($pdo);
 
-// 3. Hent alle saker med tilknyttet saksbehandlernavn
+// 3. Fetch all tickets with associated staff names
 $allTickets = get_all_tickets($pdo);
 
-// 4. Hent statistikk over saker fordelt på status
+// 4. Fetch status counts summary
 $statusCounts = get_ticket_status_counts($pdo);
 
 require_once __DIR__ . "/includes/header.php";
@@ -40,13 +40,13 @@ require_once __DIR__ . "/includes/header.php";
     </div>
 </div>
 
-<!-- To-kolonners layout for dashbord -->
+<!-- Two-column dashboard layout -->
 <div class="dashboard-grid">
 
-    <!-- VENSTRE KOLONNE: Hovedlister med saker -->
+    <!-- LEFT COLUMN: Main Ticket Lists -->
     <div class="dashboard-column">
 
-        <!-- Modul 1: Saker tildelt meg -->
+        <!-- Widget 1: Tickets assigned to me -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">&#9662; Tickets Assigned to Me</span>
@@ -88,7 +88,7 @@ require_once __DIR__ . "/includes/header.php";
             </div>
         </div>
 
-        <!-- Modul 2: Ufordelte saker (trenger oppfølging) -->
+        <!-- Widget 2: Unassigned tickets (need attention) -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">&#9662; Unassigned Tickets (Need Attention)</span>
@@ -139,7 +139,7 @@ require_once __DIR__ . "/includes/header.php";
             </div>
         </div>
 
-        <!-- Modul 3: Alle saker i systemet -->
+        <!-- Widget 3: All tickets in the system -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">&#9662; All Tickets Overview</span>
@@ -191,10 +191,10 @@ require_once __DIR__ . "/includes/header.php";
 
     </div>
 
-    <!-- HØYRE KOLONNE: Statistikk og hurtighandlinger -->
+    <!-- RIGHT COLUMN: Queue stats & quick widgets -->
     <div class="dashboard-column">
 
-        <!-- Modul: Kø- og statusoversikt -->
+        <!-- Queue Status Summary Widget -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Queue Status</span>
@@ -229,7 +229,7 @@ require_once __DIR__ . "/includes/header.php";
             </div>
         </div>
 
-        <!-- Modul: Hurtighandlinger -->
+        <!-- Quick actions widget -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Quick Actions</span>

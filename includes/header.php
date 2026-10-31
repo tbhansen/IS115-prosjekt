@@ -1,22 +1,22 @@
 <?php
-// Start sesjon dersom den ikke allerede er aktiv
+// Start session if not already active
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 ?>
 <!DOCTYPE html>
-<html lang="no">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . " - Ticketheaven" : "Ticketheaven - Kundeservice"; ?></title>
-    <!-- Stilark for hele nettstedet -->
+    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . " - Ticketheaven" : "Ticketheaven - Customer Service"; ?></title>
+    <!-- Site stylesheets -->
     <link href="assets/css/style.css" rel="stylesheet" type="text/css">
     <link href="style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
 
-    <!-- Felles toppmeny / navigasjon for nettstedet -->
+    <!-- Main top navigation header -->
     <header class="top-nav">
         <div class="nav-left">
             <a href="<?php echo isset($_SESSION['user_id']) ? 'tickets.php' : 'index.php'; ?>" class="brand-logo">
@@ -49,5 +49,5 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
     </header>
 
-    <!-- Hovedinnhold -->
+    <!-- Main Content Container -->
     <main class="main-content">

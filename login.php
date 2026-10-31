@@ -2,14 +2,14 @@
 /**
  * login.php
  * 
- * Innloggingsside for ansatte / saksbehandlere.
- * Verifiserer passord mot sikker bcrypt-hash i databasen og starter en sesjon.
+ * Staff login page.
+ * Validates credentials against password_hash in the database and creates a session.
  */
 
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/functions.php";
 
-// Dersom brukeren allerede er innlogget, send direkte til saksdashbordet
+// If already logged in, redirect directly to dashboard
 if (is_logged_in()) {
     header("Location: tickets.php");
     exit;
@@ -18,7 +18,7 @@ if (is_logged_in()) {
 $pageTitle = "Login";
 $error = "";
 
-// Behandle innloggingsforsøk (POST)
+// Handle login attempt (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST["username"] ?? "");
     $password = $_POST["password"] ?? "";
@@ -26,19 +26,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($username) || empty($password)) {
         $error = "Please enter both username and password.";
     } else {
-        // Finn brukeren i databasen
+        // Look up user in database
         $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Verifiser passordet mot den lagrede hashen
+        // Verify password against stored hash
         if ($user && password_verify($password, $user["password_hash"])) {
-            // Lagre brukerinformasjon i sesjonen
+            // Store user details in session
             $_SESSION["user_id"] = $user["id"];
             $_SESSION["username"] = $user["username"];
             $_SESSION["name"] = $user["name"];
 
-            // Videresend til dashbordet
+            // Redirect to dashboard
             header("Location: tickets.php");
             exit;
         } else {

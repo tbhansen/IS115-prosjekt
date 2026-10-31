@@ -2,22 +2,22 @@
 /**
  * includes/functions.php
  * 
- * Felles funksjonsbibliotek for Ticketheaven.
- * Inneholder gjenbrukbare funksjoner for:
- * 1. Sikkerhet og visning (XSS-beskyttelse, formatering, status-merker)
- * 2. Autentisering og tilgangskontroll (innloggingssjekk)
- * 3. Databaseoperasjoner (henting og oppdatering av saker og brukere)
+ * Shared helper function library for Ticketheaven.
+ * Contains reusable functions for:
+ * 1. Security and presentation (XSS escaping, formatting, status badges)
+ * 2. Authentication and access control (session login verification)
+ * 3. Database operations (fetching, inserting, and updating tickets and staff)
  */
 
 // ============================================================================
-// 1. SIKKERHET OG VISNING (HELPERS)
+// 1. SECURITY AND PRESENTATION (HELPERS)
 // ============================================================================
 
 /**
- * Renser tekst for sikker utskrift i HTML (beskytter mot XSS-angrep).
+ * Escapes output strings safely for HTML rendering to prevent XSS attacks.
  * 
- * @param mixed $text Teksten som skal skrives ut.
- * @return string Sikret tekst.
+ * @param mixed $text The string or value to sanitize.
+ * @return string Safe HTML escaped string.
  */
 function e($text): string
 {
@@ -25,11 +25,11 @@ function e($text): string
 }
 
 /**
- * Formaterer en MySQL TIMESTAMP eller datostreng til et leservennlig format.
- * Eksempel: "2026-10-19 14:43:00" -> "19.10.2026 14:43"
+ * Formats a MySQL TIMESTAMP or date string into a readable date and time.
+ * Example: "2026-10-19 14:43:00" -> "19.10.2026 14:43"
  * 
- * @param string|null $timestamp Datostrengen fra databasen.
- * @return string Formatert dato eller bindestrek hvis tom.
+ * @param string|null $timestamp Raw database timestamp.
+ * @return string Formatted date string, or '-' if empty.
  */
 function format_datetime(?string $timestamp): string
 {
@@ -46,10 +46,10 @@ function format_datetime(?string $timestamp): string
 }
 
 /**
- * Returnerer en formatert HTML-badge (merkelapp) for en saksstatus.
+ * Returns an HTML status badge for a given ticket status.
  * 
- * @param string $status Statusen ('open', 'in_progress', 'closed').
- * @return string HTML-kode for status-badge.
+ * @param string $status Ticket status ('open', 'in_progress', 'closed').
+ * @return string Rendered HTML badge span.
  */
 function render_status_badge(string $status): string
 {
@@ -67,13 +67,13 @@ function render_status_badge(string $status): string
 
 
 // ============================================================================
-// 2. AUTENTISERING OG SESJONSHÅNDTERING
+// 2. AUTHENTICATION AND ACCESS CONTROL
 // ============================================================================
 
 /**
- * Sjekker om brukeren for øyeblikket er logget inn som ansatt.
+ * Checks whether the current visitor is logged in as staff.
  * 
- * @return bool True dersom brukeren er logget inn, ellers false.
+ * @return bool True if logged in, false otherwise.
  */
 function is_logged_in(): bool
 {
@@ -84,8 +84,8 @@ function is_logged_in(): bool
 }
 
 /**
- * Krever at brukeren er innlogget for å se siden.
- * Dersom brukeren ikke er logget inn, videresendes de til login.php.
+ * Restricts access to authenticated staff members.
+ * Redirects unauthenticated visitors to login.php.
  * 
  * @return void
  */
@@ -98,9 +98,9 @@ function require_login(): void
 }
 
 /**
- * Returnerer ID-en til den innloggede brukeren, eller null dersom ikke innlogget.
+ * Returns the active staff member's ID from session, or null if not logged in.
  * 
- * @return int|null Bruker-ID eller null.
+ * @return int|null Staff user ID or null.
  */
 function get_logged_in_user_id(): ?int
 {
@@ -109,16 +109,16 @@ function get_logged_in_user_id(): ?int
 
 
 // ============================================================================
-// 3. DATABASEOPERASJONER FOR SAKER (TICKETS)
+// 3. DATABASE OPERATIONS FOR TICKETS
 // ============================================================================
 
 /**
- * Henter saker som er tildelt en bestemt saksbehandler.
+ * Retrieves tickets assigned to a specific staff member.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @param int $userId Bruker-ID til saksbehandleren.
- * @param int $limit Maksimalt antall saker som skal hentes (standard: 10).
- * @return array Liste over saker.
+ * @param PDO $pdo Active database connection.
+ * @param int $userId Staff member user ID.
+ * @param int $limit Maximum number of tickets to retrieve (default: 10).
+ * @return array List of tickets.
  */
 function get_tickets_assigned_to(PDO $pdo, int $userId, int $limit = 10): array
 {
@@ -133,11 +133,11 @@ function get_tickets_assigned_to(PDO $pdo, int $userId, int $limit = 10): array
 }
 
 /**
- * Henter ufordelte saker (saker som ikke er tildelt noen saksbehandler ennå).
+ * Retrieves unassigned tickets awaiting assignment.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @param int $limit Maksimalt antall saker som skal hentes (standard: 10).
- * @return array Liste over ufordelte saker.
+ * @param PDO $pdo Active database connection.
+ * @param int $limit Maximum number of tickets to retrieve (default: 10).
+ * @return array List of unassigned tickets.
  */
 function get_unassigned_tickets(PDO $pdo, int $limit = 10): array
 {
@@ -152,10 +152,10 @@ function get_unassigned_tickets(PDO $pdo, int $limit = 10): array
 }
 
 /**
- * Henter alle saker i systemet med navn på tildelt saksbehandler og oppretter.
+ * Retrieves all tickets in the system with creator and assignee staff names.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @return array Liste over alle saker.
+ * @param PDO $pdo Active database connection.
+ * @return array Complete list of tickets.
  */
 function get_all_tickets(PDO $pdo): array
 {
@@ -172,11 +172,11 @@ function get_all_tickets(PDO $pdo): array
 }
 
 /**
- * Henter en enkelt sak basert på ID, inkludert oppretter og tildelt saksbehandler.
+ * Retrieves a single ticket by its ID, joined with creator and assignee names.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @param int $ticketId Sakens unike ID.
- * @return array|false Saksdata som assosiativt array, eller false dersom ikke funnet.
+ * @param PDO $pdo Active database connection.
+ * @param int $ticketId Unique ticket ID.
+ * @return array|false Ticket record as associative array, or false if not found.
  */
 function get_ticket_by_id(PDO $pdo, int $ticketId)
 {
@@ -194,10 +194,10 @@ function get_ticket_by_id(PDO $pdo, int $ticketId)
 }
 
 /**
- * Teller antall saker gruppert etter status (open, in_progress, closed).
+ * Counts tickets grouped by status (open, in_progress, closed).
  * 
- * @param PDO $pdo Databasetilkobling.
- * @return array Assosiativt array med nøklene 'open', 'in_progress', 'closed', 'total'.
+ * @param PDO $pdo Active database connection.
+ * @return array Associative array with keys 'open', 'in_progress', 'closed', and 'total'.
  */
 function get_ticket_status_counts(PDO $pdo): array
 {
@@ -214,11 +214,11 @@ function get_ticket_status_counts(PDO $pdo): array
 }
 
 /**
- * Henter alle saksbehandlere/ansatte i systemet (sortert etter navn).
- * Brukes for eksempel i nedtrekksmenyer for å tildele saker.
+ * Retrieves all staff members in the system ordered alphabetically.
+ * Useful for building assignment dropdown lists.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @return array Liste over brukere med id, name og username.
+ * @param PDO $pdo Active database connection.
+ * @return array List of staff users with id, name, and username.
  */
 function get_all_staff(PDO $pdo): array
 {
@@ -227,15 +227,15 @@ function get_all_staff(PDO $pdo): array
 }
 
 /**
- * Oppretter en ny sak fra en kunde (uten tilknyttet intern bruker).
+ * Inserts a new customer inquiry submitted through the public support form.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @param string $title Sakens tittel/emne.
- * @param string $description Beskrivelse av henvendelsen.
- * @param string $name Kundens navn.
- * @param string $email Kundens e-postadresse.
- * @param string|null $phone Kundens telefonnummer (valgfritt).
- * @return int ID-en til den nyopprettede saken.
+ * @param PDO $pdo Active database connection.
+ * @param string $title Ticket title/subject.
+ * @param string $description Detailed message description.
+ * @param string $name Customer full name.
+ * @param string $email Customer email address.
+ * @param string|null $phone Customer phone number (optional).
+ * @return int Newly created ticket ID.
  */
 function create_customer_ticket(PDO $pdo, string $title, string $description, string $name, string $email, ?string $phone): int
 {
@@ -254,18 +254,18 @@ function create_customer_ticket(PDO $pdo, string $title, string $description, st
 }
 
 /**
- * Oppretter en sak internt av en saksbehandler.
+ * Inserts a new ticket created internally by a staff member.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @param string $title Sakens tittel/emne.
- * @param string $description Beskrivelse av henvendelsen.
- * @param string $name Kundens navn.
- * @param string $email Kundens e-postadresse.
- * @param string|null $phone Kundens telefonnummer.
- * @param string $status Sakens status ('open', 'in_progress', 'closed').
- * @param int|null $assignedTo ID til saksbehandler saken skal tildeles til.
- * @param int $createdBy ID til saksbehandler som oppretter saken.
- * @return int ID-en til den nyopprettede saken.
+ * @param PDO $pdo Active database connection.
+ * @param string $title Ticket title/subject.
+ * @param string $description Detailed message description.
+ * @param string $name Customer full name.
+ * @param string $email Customer email address.
+ * @param string|null $phone Customer phone number.
+ * @param string $status Initial status ('open', 'in_progress', 'closed').
+ * @param int|null $assignedTo User ID of staff member assigned, or null.
+ * @param int $createdBy User ID of staff member creating the ticket.
+ * @return int Newly created ticket ID.
  */
 function create_staff_ticket(
     PDO $pdo,
@@ -296,13 +296,13 @@ function create_staff_ticket(
 }
 
 /**
- * Oppdaterer status og tildeling på en eksisterende sak.
+ * Updates status and assignee for an existing ticket.
  * 
- * @param PDO $pdo Databasetilkobling.
- * @param int $ticketId ID til saken.
- * @param string $status Ny status ('open', 'in_progress', 'closed').
- * @param int|null $assignedTo ID til ny saksbehandler, eller null for ufordelt.
- * @return bool True dersom oppdateringen var vellykket.
+ * @param PDO $pdo Active database connection.
+ * @param int $ticketId Ticket ID.
+ * @param string $status New status ('open', 'in_progress', 'closed').
+ * @param int|null $assignedTo Staff user ID, or null for unassigned.
+ * @return bool True on success.
  */
 function update_ticket_status_and_assignee(PDO $pdo, int $ticketId, string $status, ?int $assignedTo): bool
 {

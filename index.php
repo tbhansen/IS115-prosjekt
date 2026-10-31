@@ -2,8 +2,8 @@
 /**
  * index.php
  * 
- * Offentlig forside for Ticketheaven.
- * Lar kunder sende inn supporthenvendelser uten å måtte logge inn.
+ * Public homepage for Ticketheaven.
+ * Allows customers to submit support inquiries without logging in.
  */
 
 require_once __DIR__ . "/includes/db.php";
@@ -14,25 +14,25 @@ $message = "";
 $messageType = "";
 $submittedTicketId = null;
 
-// Behandle innsending av kontaktskjemaet (POST)
+// Handle customer support form submission (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Les og trim skjemafelter
+    // Read and trim form inputs
     $customer_name  = trim($_POST["customer_name"] ?? "");
     $customer_email = trim($_POST["customer_email"] ?? "");
     $customer_phone = trim($_POST["customer_phone"] ?? "");
     $title          = trim($_POST["title"] ?? "");
     $description    = trim($_POST["description"] ?? "");
 
-    // Valider at påkrevde felter er fylt ut
+    // Validate that required fields are filled
     if (empty($customer_name) || empty($customer_email) || empty($title) || empty($description)) {
         $message = "Please fill in all required fields (Name, Email, Subject, and Description).";
         $messageType = "error";
     } elseif (!filter_var($customer_email, FILTER_VALIDATE_EMAIL)) {
-        // Valider e-postformat
+        // Validate email format
         $message = "Please provide a valid email address.";
         $messageType = "error";
     } else {
-        // Opprett saken i databasen ved hjelp av den gjenbrukbare funksjonen
+        // Create ticket in database using the reusable repository function
         $submittedTicketId = create_customer_ticket(
             $pdo,
             $title,
@@ -67,7 +67,7 @@ require_once __DIR__ . "/includes/header.php";
 <div style="max-width: 780px; margin: 0 auto;">
 
     <?php if ($submittedTicketId): ?>
-        <!-- Kvittering for innsendt sak -->
+        <!-- Submission confirmation receipt -->
         <div class="card" style="border-top: 4px solid #137333;">
             <div class="card-header">
                 <span class="card-title" style="color: #137333;">&#10003; Ticket #<?php echo e($submittedTicketId); ?> Received</span>
@@ -86,7 +86,7 @@ require_once __DIR__ . "/includes/header.php";
 
     <?php else: ?>
 
-        <!-- Hovedskjema for henvendelser -->
+        <!-- Customer inquiry form -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Contact &amp; Support Request Form</span>

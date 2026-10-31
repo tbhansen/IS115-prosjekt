@@ -1,19 +1,19 @@
 <?php
 /**
- * ticket_view.php (og ticket-view.php)
+ * ticket_view.php (and ticket-view.php)
  * 
- * Detaljert saksvisning for ansatte.
- * Lar saksbehandler se all kundeinformasjon, saksbeskrivelse,
- * samt oppdatere sakens status og tildele saken til kollegaer.
+ * Detailed single ticket view for staff.
+ * Allows support staff to inspect customer information, read the inquiry,
+ * update ticket status, and reassign the ticket to colleagues.
  */
 
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/functions.php";
 
-// Krever at brukeren er innlogget som ansatt
+// Require staff authentication
 require_login();
 
-// Sjekk at en gyldig numerisk saks-ID er oppgitt i URL (?id=...)
+// Validate that a numeric ticket ID was provided in the query string (?id=...)
 if (!isset($_GET["id"]) || !is_numeric($_GET["id"])) {
     header("Location: tickets.php");
     exit;
@@ -23,12 +23,12 @@ $id = (int)$_GET["id"];
 $updateMessage = "";
 $updateMessageType = "";
 
-// Håndter oppdatering av status eller saksbehandler (POST)
+// Handle status or assignee update (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_ticket"])) {
     $newStatus = $_POST["status"] ?? "open";
     $newAssignedTo = !empty($_POST["assigned_to"]) ? (int)$_POST["assigned_to"] : null;
 
-    // Valider at innsendt status er en av de tillatte verdiene
+    // Validate that the submitted status is an allowed value
     $allowedStatuses = ["open", "in_progress", "closed"];
     if (in_array($newStatus, $allowedStatuses, true)) {
         update_ticket_status_and_assignee($pdo, $id, $newStatus, $newAssignedTo);
@@ -37,15 +37,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_ticket"])) {
     }
 }
 
-// Hent saksdata ved hjelp av gjenbrukbar funksjon
+// Fetch ticket record using reusable repository function
 $ticket = get_ticket_by_id($pdo, $id);
 
-// Dersom saken ikke finnes i databasen, avbryt med en feilmelding
+// If the ticket does not exist, terminate with an informative message
 if (!$ticket) {
     die("Ticket not found. <a href='tickets.php'>Return to dashboard</a>");
 }
 
-// Hent alle ansatte for nedtrekksmenyen "Assignee"
+// Fetch staff list for the "Assignee" dropdown
 $staffList = get_all_staff($pdo);
 
 $pageTitle = "Ticket #" . $ticket["id"] . " - " . $ticket["title"];
@@ -76,7 +76,7 @@ require_once __DIR__ . "/includes/header.php";
 
 <div class="dashboard-grid">
 
-    <!-- VENSTRE KOLONNE: Saksinformasjon og henvendelsestekst -->
+    <!-- LEFT COLUMN: Ticket details and message -->
     <div class="dashboard-column">
 
         <div class="card">
@@ -139,7 +139,7 @@ require_once __DIR__ . "/includes/header.php";
                     </div>
                 </div>
 
-                <!-- Beskrivelse / Henvendelsesmelding -->
+                <!-- Description / Customer Message -->
                 <h3 style="font-size: 0.95rem; color: #1e3a60; margin-bottom: 0.5rem;">Inquiry Message / Description</h3>
                 <div class="ticket-description-box">
                     <?php echo nl2br(e($ticket["description"])); ?>
@@ -150,10 +150,10 @@ require_once __DIR__ . "/includes/header.php";
 
     </div>
 
-    <!-- HØYRE KOLONNE: Endring av status og tildeling -->
+    <!-- RIGHT COLUMN: Status & assignment controls -->
     <div class="dashboard-column">
 
-        <!-- Skjema for å oppdatere status og behandler -->
+        <!-- Update status and assignee form -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Ticket Management</span>
@@ -178,7 +178,7 @@ require_once __DIR__ . "/includes/header.php";
                     </div>
 
                     <div class="form-group">
-                        <label for="assigned_to">Assignee / Owner (Eier)</label>
+                        <label for="assigned_to">Assignee / Owner</label>
                         <select id="assigned_to" name="assigned_to" class="form-control">
                             <option value="">-- Unassigned --</option>
                             <?php foreach ($staffList as $staff): ?>
@@ -198,7 +198,7 @@ require_once __DIR__ . "/includes/header.php";
             </div>
         </div>
 
-        <!-- Hurtighandlinger for saken -->
+        <!-- Quick actions for ticket -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Direct Actions</span>

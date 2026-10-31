@@ -1,32 +1,32 @@
 <?php
 /**
- * Databasetilkobling (PDO)
+ * Database connection (PDO)
  * 
- * Kobler til MariaDB-databasen ved hjelp av standardinnstillinger for DDEV.
- * Setter PDO i feilsøkingsmodus slik at eventuelle SQL-feil kaster unntak (exceptions).
+ * Connects to the MariaDB database using default DDEV credentials.
+ * Configures PDO in exception error mode so SQL issues throw catchable exceptions.
  */
 
-// Database-innstillinger (standard for DDEV)
+// Database connection settings (DDEV defaults)
 $host     = "db";
 $dbname   = "db";
 $username = "db";
 $password = "db";
 
 try {
-    // Opprett en ny PDO-tilkobling
+    // Create a new PDO instance
     $pdo = new PDO(
         "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
         $username,
         $password
     );
 
-    // Konfigurer PDO til å kaste feilmeldinger dersom en spørring feiler
+    // Throw exceptions when a database error occurs
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Sett standard fetch-modus til assosiativt array
+    // Set default fetch mode to associative array
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    // Vis en forståelig feilmelding dersom tilkoblingen feiler
-    die("Kunne ikke koble til databasen: " . htmlspecialchars($e->getMessage()));
+    // Show a user-friendly error message if the connection fails
+    die("Database connection failed: " . htmlspecialchars($e->getMessage()));
 }

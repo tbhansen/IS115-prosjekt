@@ -2,9 +2,9 @@
 /**
  * create_user.php
  * 
- * Registrering av ny ansatt / saksbehandler.
- * Validerer input, sjekker at brukernavnet er ledig,
- * og lagrer passordet sikkert med password_hash().
+ * New staff member registration.
+ * Validates form inputs, checks username uniqueness,
+ * and securely hashes password using password_hash().
  */
 
 require_once __DIR__ . "/includes/db.php";
@@ -14,14 +14,14 @@ $pageTitle = "Create User";
 $message = "";
 $messageType = "";
 
-// Behandle registreringsskjemaet (POST)
+// Handle registration form submission (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Les og trim skjemafelter
+    // Read and trim form fields
     $name     = trim($_POST["name"] ?? "");
     $username = trim($_POST["username"] ?? "");
     $password = $_POST["password"] ?? "";
 
-    // Sjekk at alle påkrevde felter er fylt ut
+    // Validate that all required fields are provided
     if (empty($name) || empty($username) || empty($password)) {
         $message = "Please fill in all fields.";
         $messageType = "error";
@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = "Password must be at least 6 characters long.";
         $messageType = "error";
     } else {
-        // Sjekk om brukernavnet allerede er i bruk
+        // Check if username is already registered
         $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $existingUser = $stmt->fetch();
@@ -38,10 +38,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $message = "Username is already registered. Please choose another.";
             $messageType = "error";
         } else {
-            // Hash passordet sikkert med standard hashing-algoritme (bcrypt)
+            // Hash password securely with default bcrypt algorithm
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-            // Sett inn den nye saksbehandleren i users-tabellen
+            // Insert new staff member record into users table
             $insertStmt = $pdo->prepare(
                 "INSERT INTO users (name, username, password_hash) VALUES (?, ?, ?)"
             );

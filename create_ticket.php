@@ -2,26 +2,26 @@
 /**
  * create_ticket.php
  * 
- * Internt skjema for saksbehandlere til å opprette nye saker manuelt
- * (for eksempel ved henvendelser mottatt via telefon eller direkte kontakt).
+ * Internal form for staff to manually log customer inquiries
+ * (e.g., requests received via phone call or in-person walk-ins).
  */
 
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/functions.php";
 
-// Krever at brukeren er innlogget som ansatt
+// Require staff authentication
 require_login();
 
 $pageTitle = "Create Ticket (Staff)";
 $message = "";
 $messageType = "";
 
-// Hent ansatte for tildelingsmenyen
+// Fetch staff members for assignment dropdown
 $staffMembers = get_all_staff($pdo);
 
-// Behandle innsending av saken (POST)
+// Handle manual ticket submission (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Les og trim skjemafelter
+    // Read and trim form inputs
     $customer_name  = trim($_POST["customer_name"] ?? "");
     $customer_email = trim($_POST["customer_email"] ?? "");
     $customer_phone = trim($_POST["customer_phone"] ?? "");
@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $assigned_to    = !empty($_POST["assigned_to"]) ? (int)$_POST["assigned_to"] : null;
     $created_by     = get_logged_in_user_id();
 
-    // Valider obligatoriske felter
+    // Validate required fields
     if (empty($customer_name) || empty($customer_email) || empty($title) || empty($description)) {
         $message = "Please fill in all required fields (Customer Name, Email, Subject, Description).";
         $messageType = "error";
@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = "Please enter a valid customer email address.";
         $messageType = "error";
     } else {
-        // Opprett saken i databasen ved hjelp av gjenbrukbar funksjon
+        // Create ticket in database using reusable repository function
         $newTicketId = create_staff_ticket(
             $pdo,
             $title,
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $created_by
         );
 
-        // Videresend direkte til sakens detaljvisning
+        // Redirect directly to the newly created ticket view
         header("Location: ticket_view.php?id=" . $newTicketId . "&created=1");
         exit;
     }

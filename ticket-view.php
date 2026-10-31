@@ -1,6 +1,6 @@
 <?php
 /**
- * ticket-view.php - Bakoverkompatibel referanse
- * Inkluderer den oppdaterte ticket_view.php
+ * ticket-view.php - Backward compatibility wrapper
+ * Loads the main ticket_view.php file
  */
 require_once __DIR__ . "/ticket_view.php";
