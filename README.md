@@ -27,7 +27,7 @@ Dette prosjektet er utviklet som en del av emnet **IS-115** ved Universitetet i 
   - **Ufordelte saker:** Viser nye saker som venter på å bli plukket opp.
   - **Alle saker:** Komplett tabell over alle henvendelser med tildelt behandler og opprettelsesdato.
   - **Status-teller:** Rask oversikt over antall åpne (`open`), pågående (`in_progress`) og lukkede (`closed`) saker.
-* **Saksvisning og behandling (`ticket-view.php`):**
+* **Saksvisning og behandling (`ticket_view.php`):**
   - Detaljert visning av sakens innhold og kundeinformasjon.
   - Mulighet til å endre sakens status (`open`, `in_progress`, `closed`).
   - Mulighet til å delegere / tildele saken til en annen kollega.
@@ -52,7 +52,7 @@ Dette prosjektet er utviklet som en del av emnet **IS-115** ved Universitetet i 
 IS115-prosjekt/
 ├── index.php             # Offentlig forside / innsendingsskjema for kunder
 ├── tickets.php           # Internt dashbord for saksbehandlere
-├── ticket-view.php       # Detaljvisning og oppdatering av enkeltsak
+├── ticket_view.php       # Detaljvisning og oppdatering av enkeltsak
 ├── create_ticket.php     # Registrering av ny sak (for ansatte)
 ├── login.php             # Innloggingsside for ansatte
 ├── logout.php            # Logger ut og avslutter sesjonen

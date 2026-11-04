@@ -73,7 +73,7 @@ require_once __DIR__ . "/includes/header.php";
                                 <tr>
                                     <td><strong><?php echo e($ticket["id"]); ?></strong></td>
                                     <td>
-                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>">
+                                        <a class="ticket-link" href="ticket_view.php?id=<?php echo e($ticket["id"]); ?>">
                                             <?php echo e($ticket["title"]); ?>
                                         </a>
                                     </td>
@@ -116,7 +116,7 @@ require_once __DIR__ . "/includes/header.php";
                                 <tr>
                                     <td><strong><?php echo e($ticket["id"]); ?></strong></td>
                                     <td>
-                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>">
+                                        <a class="ticket-link" href="ticket_view.php?id=<?php echo e($ticket["id"]); ?>">
                                             <?php echo e($ticket["title"]); ?>
                                         </a>
                                     </td>
@@ -127,7 +127,7 @@ require_once __DIR__ . "/includes/header.php";
                                     <td><?php echo render_status_badge($ticket["status"]); ?></td>
                                     <td><?php echo format_datetime($ticket["created_at"]); ?></td>
                                     <td>
-                                        <a href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>" class="btn btn-outline btn-sm">
+                                        <a href="ticket_view.php?id=<?php echo e($ticket["id"]); ?>" class="btn btn-outline btn-sm">
                                             Open
                                         </a>
                                     </td>
@@ -167,7 +167,7 @@ require_once __DIR__ . "/includes/header.php";
                                 <tr>
                                     <td><strong><?php echo e($ticket["id"]); ?></strong></td>
                                     <td>
-                                        <a class="ticket-link" href="ticket-view.php?id=<?php echo e($ticket["id"]); ?>">
+                                        <a class="ticket-link" href="ticket_view.php?id=<?php echo e($ticket["id"]); ?>">
                                             <?php echo e($ticket["title"]); ?>
                                         </a>
                                     </td>
