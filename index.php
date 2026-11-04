@@ -1,26 +1,9 @@
 <?php
 /**
- * Ticketheaven - Public Customer Portal & Inquiry Intake
+ * index.php
  * 
- * Purpose:
- * Serves as the public landing page and customer support intake gateway.
- * Allows customers to submit inquiries without logging in, validates input fields,
- * stores the ticket into the database via the service layer, and presents an immediate confirmation receipt.
- * 
- * Architectural & Design Choices:
- * - Employs a self-submitting form architecture (submits via POST back to index.php).
- *   Upon submission failure, previously typed values ($_POST) are repopulated into the form
- *   via e() escaping, saving customers from retyping their data.
- * - Enforces dual-layer validation: HTML5 client-side attributes (required, type="email") combined with
- *   rigorous PHP server-side validation (trimming, emptiness check, and filter_var with FILTER_VALIDATE_EMAIL).
- * - Distinguishes logged-in staff visitors by rendering a subtle notification banner at the top,
- *   allowing staff to quickly navigate back to their dashboard (tickets.php) while reviewing the public intake UI.
- * 
- * Assumptions & Limitations:
- * - Public Intake Assumption: Anyone with access to the URL can submit inquiries; no customer registration is required.
- * - Limitation: Automated email receipts to the customer's submitted address are not yet triggered
- *   (planned for implementation in Sprint 5).
- * - Limitation: Does not currently feature CAPTCHA or rate-limiting against spam submissions.
+ * Public homepage for Ticketheaven.
+ * Allows customers to submit support inquiries without logging in.
  */
 
 require_once __DIR__ . "/includes/db.php";
@@ -33,23 +16,23 @@ $submittedTicketId = null;
 
 // Handle customer support form submission (POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Sanitize and normalize inputs by stripping extraneous surrounding whitespace
+    // Read and trim form inputs
     $customer_name  = trim($_POST["customer_name"] ?? "");
     $customer_email = trim($_POST["customer_email"] ?? "");
     $customer_phone = trim($_POST["customer_phone"] ?? "");
     $title          = trim($_POST["title"] ?? "");
     $description    = trim($_POST["description"] ?? "");
 
-    // Validate presence of required data fields
+    // Validate that required fields are filled
     if (empty($customer_name) || empty($customer_email) || empty($title) || empty($description)) {
         $message = "Please fill in all required fields (Name, Email, Subject, and Description).";
         $messageType = "error";
     } elseif (!filter_var($customer_email, FILTER_VALIDATE_EMAIL)) {
-        // Validate email address compliance using PHP's standard email filter
+        // Validate email format
         $message = "Please provide a valid email address.";
         $messageType = "error";
     } else {
-        // Persist ticket into database via reusable service function
+        // Create ticket in database using the reusable repository function
         $submittedTicketId = create_customer_ticket(
             $pdo,
             $title,
@@ -68,7 +51,6 @@ require_once __DIR__ . "/includes/header.php";
 ?>
 
 <?php if (is_logged_in()): ?>
-    <!-- Context banner displayed only when an authenticated staff member views the public page -->
     <div style="background-color: #e0f2fe; border: 1px solid #bae6fd; padding: 0.6rem 1rem; border-radius: 4px; margin-bottom: 1.25rem; font-size: 0.88rem; color: #0369a1; display: flex; justify-content: space-between; align-items: center;">
         <span>You are currently viewing the customer intake form while logged in as staff.</span>
         <a href="tickets.php" class="btn btn-primary btn-sm">&larr; Return to Staff Dashboard</a>
@@ -85,7 +67,7 @@ require_once __DIR__ . "/includes/header.php";
 <div style="max-width: 780px; margin: 0 auto;">
 
     <?php if ($submittedTicketId): ?>
-        <!-- Submission confirmation receipt view rendered upon successful ticket creation -->
+        <!-- Submission confirmation receipt -->
         <div class="card" style="border-top: 4px solid #137333;">
             <div class="card-header">
                 <span class="card-title" style="color: #137333;">&#10003; Ticket #<?php echo e($submittedTicketId); ?> Received</span>
@@ -104,7 +86,7 @@ require_once __DIR__ . "/includes/header.php";
 
     <?php else: ?>
 
-        <!-- Customer inquiry submission form -->
+        <!-- Customer inquiry form -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Contact &amp; Support Request Form</span>
