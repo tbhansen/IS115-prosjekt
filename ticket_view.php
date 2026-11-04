@@ -1,19 +1,37 @@
 <?php
 /**
- * ticket_view.php (and ticket-view.php)
+ * Ticketheaven - Single Ticket Management View
  * 
- * Detailed single ticket view for staff.
- * Allows support staff to inspect customer information, read the inquiry,
- * update ticket status, and reassign the ticket to colleagues.
+ * Purpose:
+ * Serves as the detailed inspection and management interface for a specific support ticket.
+ * Authenticated support staff can examine customer contact details, read inquiry messages,
+ * change the ticket's lifecycle status, and assign or reassign ownership among staff members.
+ * 
+ * Architectural & Design Choices:
+ * - Follows a Page Controller pattern: handles HTTP parameter validation, processes POST update actions,
+ *   retrieves required relational data via helper functions, and renders the responsive split-column UI.
+ * - Enforces strict server-side validation on submitted status values using an explicit whitelist array
+ *   (in_array with strict checking === true), preventing unauthorized or corrupted state transitions.
+ * - Converts an empty assignee selection ("") to PHP null, properly aligning with database NULL foreign keys
+ *   rather than inserting invalid integer zeros.
+ * 
+ * Assumptions & Limitations:
+ * - Authentication Assumption: Access is strictly restricted to staff; unauthenticated visitors are redirected.
+ * - Permission Assumption: Assumes all logged-in staff members have equal permissions to view and modify any ticket
+ *   (fine-grained role-based access control, e.g., Admin vs. Agent, can be added in future iterations).
+ * - Limitation: Uses standard HTTP POST form submission causing a full-page reload on update.
+ *   AJAX or background updates can be introduced in later sprints for smoother UX.
  */
 
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/functions.php";
 
-// Require staff authentication
+// Enforce staff authentication; redirects immediately if no valid session exists
 require_login();
 
-// Validate that a numeric ticket ID was provided in the query string (?id=...)
+// Validate query parameter: ticket ID must be present and numeric
+// Why: Rejecting non-numeric or missing IDs early avoids executing unnecessary database queries
+// and prevents unexpected type errors or warnings.
 if (!isset($_GET["id"]) || !is_numeric($_GET["id"])) {
     header("Location: tickets.php");
     exit;
@@ -23,12 +41,15 @@ $id = (int)$_GET["id"];
 $updateMessage = "";
 $updateMessageType = "";
 
-// Handle status or assignee update (POST)
+// Handle status or assignee update (POST request)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_ticket"])) {
     $newStatus = $_POST["status"] ?? "open";
+    
+    // Why: If the user selects "-- Unassigned --", the submitted value is empty.
+    // Casting non-empty values to integer and defaulting to null ensures foreign key integrity.
     $newAssignedTo = !empty($_POST["assigned_to"]) ? (int)$_POST["assigned_to"] : null;
 
-    // Validate that the submitted status is an allowed value
+    // Why: Whitelist validation guarantees that only valid, recognized ticket states can be written to the database.
     $allowedStatuses = ["open", "in_progress", "closed"];
     if (in_array($newStatus, $allowedStatuses, true)) {
         update_ticket_status_and_assignee($pdo, $id, $newStatus, $newAssignedTo);
@@ -37,15 +58,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_ticket"])) {
     }
 }
 
-// Fetch ticket record using reusable repository function
+// Fetch the single ticket record using the reusable service function
 $ticket = get_ticket_by_id($pdo, $id);
 
-// If the ticket does not exist, terminate with an informative message
+// If the ticket ID does not match any database row, gracefully terminate with an informative prompt
 if (!$ticket) {
     die("Ticket not found. <a href='tickets.php'>Return to dashboard</a>");
 }
 
-// Fetch staff list for the "Assignee" dropdown
+// Fetch list of staff members to populate the assignment dropdown
 $staffList = get_all_staff($pdo);
 
 $pageTitle = "Ticket #" . $ticket["id"] . " - " . $ticket["title"];
@@ -63,12 +84,14 @@ require_once __DIR__ . "/includes/header.php";
 </div>
 
 <?php if (isset($_GET["created"])): ?>
+    <!-- Notice displayed when redirected after internal ticket creation -->
     <div class="alert alert-success">
         Ticket #<?php echo e($ticket["id"]); ?> created successfully!
     </div>
 <?php endif; ?>
 
 <?php if (!empty($updateMessage)): ?>
+    <!-- Notice displayed upon successful status or assignee modification -->
     <div class="alert alert-<?php echo e($updateMessageType); ?>">
         <?php echo e($updateMessage); ?>
     </div>
@@ -76,7 +99,7 @@ require_once __DIR__ . "/includes/header.php";
 
 <div class="dashboard-grid">
 
-    <!-- LEFT COLUMN: Ticket details and message -->
+    <!-- LEFT COLUMN: Ticket details, customer information, and message body -->
     <div class="dashboard-column">
 
         <div class="card">
@@ -100,6 +123,7 @@ require_once __DIR__ . "/includes/header.php";
                     <div>
                         <div class="meta-item-label">Customer Email</div>
                         <div class="meta-item-value">
+                            <!-- Mailto link allowing direct customer communication in default email client -->
                             <a href="mailto:<?php echo e($ticket["customer_email"]); ?>" class="ticket-link">
                                 <?php echo e($ticket["customer_email"]); ?>
                             </a>
@@ -139,10 +163,14 @@ require_once __DIR__ . "/includes/header.php";
                     </div>
                 </div>
 
-                <!-- Description / Customer Message -->
+                <!-- Description / Customer Inquiry Message Body -->
                 <h3 style="font-size: 0.95rem; color: #1e3a60; margin-bottom: 0.5rem;">Inquiry Message / Description</h3>
                 <div class="ticket-description-box">
-                    <?php echo nl2br(e($ticket["description"])); ?>
+                    <?php 
+                    // Why: nl2br combined with e() safely converts line breaks to HTML <br> tags
+                    // while ensuring all user text remains sanitized against XSS attacks.
+                    echo nl2br(e($ticket["description"])); 
+                    ?>
                 </div>
 
             </div>
@@ -150,7 +178,7 @@ require_once __DIR__ . "/includes/header.php";
 
     </div>
 
-    <!-- RIGHT COLUMN: Status & assignment controls -->
+    <!-- RIGHT COLUMN: Status & assignment modification controls -->
     <div class="dashboard-column">
 
         <!-- Update status and assignee form -->
@@ -198,7 +226,7 @@ require_once __DIR__ . "/includes/header.php";
             </div>
         </div>
 
-        <!-- Quick actions for ticket -->
+        <!-- Direct communication and navigation shortcuts -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Direct Actions</span>
