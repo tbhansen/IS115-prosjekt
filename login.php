@@ -1,9 +1,17 @@
 <?php
 /**
- * login.php
- * 
- * Staff login page.
- * Validates credentials against password_hash in the database and creates a session.
+ * Staff Login Page
+ *
+ * Purpose:
+ * Lets staff log into their account to see the dashboard and tickets.
+ *
+ * Why we wrote it like this:
+ * - Uses password_verify() to securely check the entered password against the hashed password in the database.
+ * - Shows a general "Invalid username or password" message so attackers can't guess which usernames exist.
+ * - If already logged in, it sends you straight to tickets.php so you don't have to log in twice.
+ *
+ * Assumptions:
+ * - Assumes staff accounts have already been created in the database.
  */
 
 require_once __DIR__ . "/includes/db.php";

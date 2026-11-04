@@ -1,10 +1,18 @@
 <?php
 /**
- * ticket_view.php (and ticket-view.php)
- * 
- * Detailed single ticket view for staff.
- * Allows support staff to inspect customer information, read the inquiry,
- * update ticket status, and reassign the ticket to colleagues.
+ * Ticket Details Page
+ *
+ * Purpose:
+ * Lets staff view one specific ticket and change its status or assign it to someone.
+ *
+ * Why we wrote it like this:
+ * - Checks is_numeric($_GET['id']) so we don't search the database with an invalid ID.
+ * - Only allows status to be 'open', 'in_progress', or 'closed' to stop invalid data.
+ * - If assignee is empty, we set it to NULL so the database knows no one owns it yet.
+ *
+ * Assumptions & Limitations:
+ * - Only logged-in staff can access this page.
+ * - The page reloads when you click update.
  */
 
 require_once __DIR__ . "/includes/db.php";

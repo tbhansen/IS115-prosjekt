@@ -1,9 +1,17 @@
 <?php
 /**
- * Database connection (PDO)
- * 
- * Connects to the MariaDB database using default DDEV credentials.
- * Configures PDO in exception error mode so SQL issues throw catchable exceptions.
+ * Database Connection
+ *
+ * Purpose:
+ * Connects the website to the MySQL/MariaDB database using PDO.
+ *
+ * Why we wrote it like this:
+ * - We use PDO because it makes it easy and safe to run database queries.
+ * - 'charset=utf8mb4' ensures letters with accents and special characters work properly.
+ * - ATTR_ERRMODE => ERRMODE_EXCEPTION makes PHP show an error if something goes wrong with SQL.
+ *
+ * Assumptions & Limitations:
+ * - Assumes we are running locally in DDEV with default database name and password 'db'.
  */
 
 // Database connection settings (DDEV defaults)

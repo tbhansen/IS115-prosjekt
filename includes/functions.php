@@ -1,13 +1,32 @@
 <?php
-/**
- * includes/functions.php
- * 
- * Shared helper function library for Ticketheaven.
- * Contains reusable functions for:
- * 1. Security and presentation (XSS escaping, formatting, status badges)
- * 2. Authentication and access control (session login verification)
- * 3. Database operations (fetching, inserting, and updating tickets and staff)
- */
+//  Helper Functions
+
+//  Purpose:
+//  Stores shared functions so we don't have to rewrite the same code on every page.
+
+// 1. Escaping function:
+// What it does: Stops malicious code (XSS) by turning special characters into safe HTML entities.
+// function e($text): string {
+//  return htmlspecialchars((string)($text ?? ""), ENT_QUOTES, "UTF-8");
+// }
+
+// 2. Date formatting:
+// What it does: Turns raw database dates (like 2026-11-04 12:00:00) into friendly dates (04.11.2026 12:00).
+// Why: If there is no date, it returns "-" instead of causing an error.
+// function format_datetime(?string $timestamp): string { ... }
+
+// 3. Login check:
+// What it does: Checks if $_SESSION['user_id'] is set to see if a staff member is logged in.
+// function is_logged_in(): bool { ... }
+
+// 4. Require login:
+// What it does: Kicks non-logged-in users back to login.php.
+// Why: Uses exit so the rest of the private page doesn't run if you're not logged in.
+// function require_login(): void { ... }
+
+// 5. Database queries:
+// Why: We use prepared statements ($stmt->prepare and ->execute([$id])) so hackers cannot inject SQL code.
+// function get_ticket_by_id(PDO $pdo, int $ticketId) { ... }
 
 // ============================================================================
 // 1. SECURITY AND PRESENTATION (HELPERS)
