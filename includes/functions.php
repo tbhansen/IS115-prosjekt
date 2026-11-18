@@ -28,6 +28,10 @@
 // Why: We use prepared statements ($stmt->prepare and ->execute([$id])) so hackers cannot inject SQL code.
 // function get_ticket_by_id(PDO $pdo, int $ticketId) { ... }
 
+// Load model classes
+require_once __DIR__ . "/Ticket.php";
+require_once __DIR__ . "/User.php";
+
 // ============================================================================
 // 1. SECURITY AND PRESENTATION (HELPERS)
 // ============================================================================

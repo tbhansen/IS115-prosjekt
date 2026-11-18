@@ -53,6 +53,9 @@ if (!$ticket) {
     die("Ticket not found. <a href='tickets.php'>Return to dashboard</a>");
 }
 
+// Instantiate Ticket object
+$ticketObj = new Ticket($ticket);
+
 // Fetch staff list for the "Assignee" dropdown
 $staffList = get_all_staff($pdo);
 
@@ -92,7 +95,7 @@ require_once __DIR__ . "/includes/header.php";
                 <span class="card-title">
                     Ticket #<?php echo e($ticket["id"]); ?>: <?php echo e($ticket["title"]); ?>
                 </span>
-                <?php echo render_status_badge($ticket["status"]); ?>
+                <?php echo $ticketObj->getStatusBadge(); ?>
             </div>
             <div class="card-body">
 
